@@ -3,33 +3,33 @@ R3X Hermes Agent Adapter
 Connects and coordinates with NousResearch/hermes-agent.
 Preserves original Hermes files and interfaces via standard decoupled protocol.
 """
-import os
 import json
-import httpx
-from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
+from typing import Any
+
+import httpx
 
 from r3x.core.config import settings
 from r3x.core.logger import logger
-from r3x.core.exceptions import AdapterError
+from r3x.memory.db import db
 from r3x.mixer.models import TaskRole
 from r3x.mixer.router import model_router
-from r3x.memory.db import db
+
 
 class HermesAdapter:
-    def __init__(self, endpoint: Optional[str] = None):
+    def __init__(self, endpoint: str | None = None):
         self.endpoint = endpoint or settings.hermes_endpoint
-        self._is_online: Optional[bool] = None
+        self._is_online: bool | None = None
 
-    def check_status(self) -> Tuple[bool, str]:
+    def check_status(self) -> tuple[bool, str]:
         """Verify Hermes Agent connectivity."""
         try:
             r = httpx.get(f"{self.endpoint}/health", timeout=1.0)
             if r.status_code == 200:
                 self._is_online = True
                 return True, f"Hermes Daemon Active ({self.endpoint})"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Hermes health endpoint check: {e}")
 
         # Check local repository installation
         local_repo = Path("hermes-agent")
@@ -41,10 +41,10 @@ class HermesAdapter:
     def create_security_plan(
         self,
         target_url: str,
-        scope_rules: Dict[str, Any],
+        scope_rules: dict[str, Any],
         scan_type: str = "quick",
-        past_scan_history: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        past_scan_history: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """
         Hermes creates an adaptive, prioritized security assessment plan.
         """
@@ -126,7 +126,7 @@ Provide response in structured JSON with keys:
             "reasoning": "Standard verified non-destructive bug bounty assessment flow."
         }
 
-    def analyze_and_select_next_test(self, current_findings: List[Dict[str, Any]], target_url: str) -> Dict[str, Any]:
+    def analyze_and_select_next_test(self, current_findings: list[dict[str, Any]], target_url: str) -> dict[str, Any]:
         """
         Evaluate discovered technologies or vulnerabilities to dynamically trigger the next specialized agent.
         """

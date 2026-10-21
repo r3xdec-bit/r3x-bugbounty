@@ -3,16 +3,16 @@ R3X Smart Model Router
 Orchestrates multi-provider load-balancing, fallback chains, cost monitoring, and task routing.
 """
 import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
+
 from rich.console import Console
 from rich.table import Table
 
-from r3x.mixer.models import TaskRole, DEFAULT_PROVIDERS
-from r3x.mixer.key_store import key_store
-from r3x.mixer.providers import provider_client
-from r3x.memory.db import db
-from r3x.core.exceptions import ProviderError
 from r3x.core.logger import logger
+from r3x.memory.db import db
+from r3x.mixer.key_store import key_store
+from r3x.mixer.models import DEFAULT_PROVIDERS, TaskRole
+from r3x.mixer.providers import provider_client
 
 console = Console()
 
@@ -74,11 +74,11 @@ class ModelRouter:
     async def generate_async(
         self,
         role: TaskRole,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.2,
         max_tokens: int = 2048,
-        preferred_provider: Optional[str] = None
-    ) -> Dict[str, Any]:
+        preferred_provider: str | None = None
+    ) -> dict[str, Any]:
         """
         Execute request with automatic provider fallback, load-balancing, and usage accounting.
         """
@@ -89,7 +89,6 @@ class ModelRouter:
             if p not in providers_to_try:
                 providers_to_try.append(p)
 
-        last_error = None
         for prov in providers_to_try:
             # Check if provider has active keys or doesn't require keys (e.g. ollama)
             cfg = DEFAULT_PROVIDERS.get(prov)
@@ -135,7 +134,6 @@ class ModelRouter:
                 logger.warning(f"Provider {prov} failed: {e}. Attempting fallback...")
                 if active_key:
                     key_store.mark_key_failure(active_key.key_id)
-                last_error = e
 
         # If all external API providers failed or none configured: provide deterministic heuristic fallback
         logger.warning("All AI providers unreachable or unconfigured. Employing autonomous security heuristic engine.")
@@ -149,7 +147,7 @@ class ModelRouter:
             "cost_usd": 0.0
         }
 
-    def generate(self, role: TaskRole, messages: List[Dict[str, str]], **kwargs) -> Dict[str, Any]:
+    def generate(self, role: TaskRole, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
         """Synchronous wrapper for generate_async."""
         try:
             loop = asyncio.get_event_loop()
@@ -200,7 +198,7 @@ class ModelRouter:
         console.print(metrics_text)
         console.print()
 
-    def test_providers(self, specific_provider: Optional[str] = None) -> None:
+    def test_providers(self, specific_provider: str | None = None) -> None:
         """Probe configured providers with a live test query."""
         console.print("[bold cyan]Probing AI Provider Connections...[/]\n")
         providers = [specific_provider.lower()] if specific_provider else list(DEFAULT_PROVIDERS.keys())

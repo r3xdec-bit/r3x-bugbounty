@@ -2,9 +2,11 @@
 R3X Evidence Collector Agent
 Sanitizes, hashes, and stores empirical vulnerability evidence into persistent memory.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.memory.db import db
+
 
 class EvidenceCollectorAgent(BaseAgent):
     def __init__(self):
@@ -13,7 +15,7 @@ class EvidenceCollectorAgent(BaseAgent):
             description="Collects, cryptographically hashes, sanitizes, and persists findings and empirical evidence."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         scan_id = context["scan_id"]
         findings_records = context.get("findings", [])
 

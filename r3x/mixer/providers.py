@@ -2,14 +2,16 @@
 R3X Provider HTTP Client Implementation
 Communicates with OpenAI-compatible inference endpoints.
 """
-import time
-import httpx
 import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+import time
+from typing import Any
 
-from r3x.mixer.models import ProviderConfig, DEFAULT_PROVIDERS
+import httpx
+
 from r3x.core.exceptions import ProviderError
 from r3x.core.logger import logger, redact_secrets
+from r3x.mixer.models import DEFAULT_PROVIDERS
+
 
 class ProviderClient:
     def __init__(self, timeout: float = 30.0):
@@ -20,11 +22,11 @@ class ProviderClient:
         provider_name: str,
         api_key: str,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         temperature: float = 0.2,
         max_tokens: int = 2048,
         retries: int = 3
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute OpenAI-compatible chat completion with exponential backoff.
         Returns: {
@@ -107,7 +109,7 @@ class ProviderClient:
 
         raise ProviderError(f"Exhausted {retries} retries on {provider_name}: {last_exception}")
 
-    async def ping_provider(self, provider_name: str, api_key: str) -> Tuple[bool, str]:
+    async def ping_provider(self, provider_name: str, api_key: str) -> tuple[bool, str]:
         """Test health by sending a minimal token query."""
         try:
             cfg = DEFAULT_PROVIDERS[provider_name.lower()]

@@ -3,13 +3,13 @@ R3X Interactive Terminal Shell (REPL)
 Provides auto-completion, command history, and direct execution within `r3x > `.
 """
 import shlex
-import sys
+
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.history import InMemoryHistory
 from rich.console import Console
 
-from r3x.cli.banner import show_banner, get_live_status
+from r3x.cli.banner import show_banner
 
 console = Console()
 

@@ -3,23 +3,24 @@ R3X HexStrike AI MCP Agents v6.0 Adapter
 Connects to HexStrike AI MCP Server (https://github.com/0x4m4/hexstrike-ai v6.0).
 Dynamically discovers MCP tools, reads schemas, and coordinates tool execution with safety controls.
 """
-import httpx
-import json
 import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
+
+import httpx
 
 from r3x.core.config import settings
-from r3x.core.logger import logger, redact_secrets
 from r3x.core.exceptions import AdapterError, ToolExecutionError
+from r3x.core.logger import logger
+
 
 class HexStrikeAdapter:
-    def __init__(self, endpoint: Optional[str] = None):
+    def __init__(self, endpoint: str | None = None):
         self.endpoint = endpoint or settings.hexstrike_endpoint
-        self._discovered_tools: Dict[str, Dict[str, Any]] = {}
+        self._discovered_tools: dict[str, dict[str, Any]] = {}
         self._is_connected: bool = False
-        self._last_error: Optional[str] = None
+        self._last_error: str | None = None
 
-    def check_connection(self) -> Tuple[bool, str]:
+    def check_connection(self) -> tuple[bool, str]:
         """Verify connectivity to HexStrike MCP Server (Port 8888)."""
         try:
             r = httpx.get(f"{self.endpoint}/health", timeout=1.5)
@@ -34,7 +35,7 @@ class HexStrikeAdapter:
             self._last_error = str(e)
             return False, f"HexStrike Server unreachable at {self.endpoint}"
 
-    async def discover_tools_async(self) -> Dict[str, Dict[str, Any]]:
+    async def discover_tools_async(self) -> dict[str, dict[str, Any]]:
         """
         Dynamically query HexStrike MCP Server for registered security tools and their schemas.
         Never assumes tool names without dynamic discovery.
@@ -65,7 +66,8 @@ class HexStrikeAdapter:
                         logger.info(f"HexStrike MCP: Dynamically discovered {len(self._discovered_tools)} tools from {ep}")
                         self._is_connected = True
                         return self._discovered_tools
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"HexStrike endpoint probe {ep} failed: {e}")
                     continue
 
         # If server is not responding, record that zero tools were discovered from server
@@ -73,7 +75,7 @@ class HexStrikeAdapter:
         self._is_connected = False
         return {}
 
-    def discover_tools(self) -> Dict[str, Dict[str, Any]]:
+    def discover_tools(self) -> dict[str, dict[str, Any]]:
         """Synchronous wrapper for tool discovery."""
         try:
             return asyncio.run(self.discover_tools_async())
@@ -81,7 +83,7 @@ class HexStrikeAdapter:
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(self.discover_tools_async())
 
-    async def execute_tool_async(self, tool_name: str, arguments: Dict[str, Any], timeout: float = 30.0) -> Dict[str, Any]:
+    async def execute_tool_async(self, tool_name: str, arguments: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
         """
         Execute an authorized security action through HexStrike MCP protocol.
         """
@@ -109,7 +111,7 @@ class HexStrikeAdapter:
         except Exception as e:
             raise ToolExecutionError(f"Error executing HexStrike tool '{tool_name}': {e}")
 
-    def execute_tool(self, tool_name: str, arguments: Dict[str, Any], timeout: float = 30.0) -> Dict[str, Any]:
+    def execute_tool(self, tool_name: str, arguments: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
         """Synchronous wrapper for execute_tool_async."""
         try:
             return asyncio.run(self.execute_tool_async(tool_name, arguments, timeout))
@@ -117,7 +119,7 @@ class HexStrikeAdapter:
             loop = asyncio.get_event_loop()
             return loop.run_until_complete(self.execute_tool_async(tool_name, arguments, timeout))
 
-    def get_tool_list(self) -> List[Dict[str, Any]]:
+    def get_tool_list(self) -> list[dict[str, Any]]:
         """Return list of dynamically discovered tools and schemas."""
         if not self._discovered_tools and self._is_connected:
             self.discover_tools()

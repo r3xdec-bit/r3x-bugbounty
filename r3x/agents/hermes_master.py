@@ -3,22 +3,22 @@ R3X Hermes Master Orchestrator
 Coordinates multi-agent execution, adaptive task delegation, and lifecycle management.
 """
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any
+
 from rich.console import Console
 from rich.panel import Panel
 
-from r3x.agents.base import BaseAgent
-from r3x.integrations.hermes_adapter import hermes_adapter
-from r3x.agents.scope_guardian_agent import scope_guardian_agent
-from r3x.agents.recon_agent import recon_agent
-from r3x.agents.web_security_agent import web_security_agent
 from r3x.agents.api_security_agent import api_security_agent
-from r3x.agents.js_analysis_agent import js_analysis_agent
+from r3x.agents.base import BaseAgent
 from r3x.agents.cve_intel_agent import cve_intel_agent
 from r3x.agents.evidence_collector_agent import evidence_collector_agent
+from r3x.agents.js_analysis_agent import js_analysis_agent
+from r3x.agents.recon_agent import recon_agent
+from r3x.agents.scope_guardian_agent import scope_guardian_agent
 from r3x.agents.verification_agent import verification_agent
+from r3x.agents.web_security_agent import web_security_agent
+from r3x.integrations.hermes_adapter import hermes_adapter
 from r3x.memory.db import db
-from r3x.core.logger import logger
 
 console = Console()
 
@@ -29,7 +29,7 @@ class HermesMasterOrchestrator(BaseAgent):
             description="Master AI agent for autonomous planning, task delegation, and cross-agent synthesis."
         )
 
-    def execute_scan(self, target_url: Optional[str] = None, project_name: str = "default", scan_type: str = "quick") -> Dict[str, Any]:
+    def execute_scan(self, target_url: str | None = None, project_name: str = "default", scan_type: str = "quick") -> dict[str, Any]:
         """
         Run the complete multi-agent authorized assessment pipeline.
         """
@@ -148,10 +148,10 @@ class HermesMasterOrchestrator(BaseAgent):
             {"findings_count": len(context["findings"]), "target": target_url}
         )
 
-        console.print(f"\n[bold green]✓ Scan Completed Successfully![/] Run 'r3x findings' or 'r3x report --html' to view results.\n")
+        console.print("\n[bold green]✓ Scan Completed Successfully![/] Run 'r3x findings' or 'r3x report --html' to view results.\n")
         return context
 
-    def resume_scan(self, scan_id: Optional[str] = None) -> None:
+    def resume_scan(self, scan_id: str | None = None) -> None:
         """Resume a paused or interrupted scan."""
         if not scan_id:
             scans = db.list_scans()
@@ -171,7 +171,7 @@ class HermesMasterOrchestrator(BaseAgent):
         target_url = targets[0]["url"] if targets else "https://target.local"
         self.execute_scan(target_url=target_url, project_name=proj["name"], scan_type=scan["scan_type"])
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         return self.execute_scan(
             target_url=context.get("target_url"),
             project_name=context.get("project_name", "default"),

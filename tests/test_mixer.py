@@ -1,9 +1,10 @@
 import os
 import tempfile
 from pathlib import Path
+
 from r3x.mixer.key_store import KeyStore
-from r3x.mixer.models import TaskRole, DEFAULT_PROVIDERS
 from r3x.mixer.router import ModelRouter
+
 
 def test_keystore_encryption_and_crud():
     with tempfile.NamedTemporaryFile(delete=False) as tf:

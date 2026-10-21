@@ -2,11 +2,11 @@
 R3X Banner & Live Status Dashboard
 Displays the stylized cyber logo, greeting, and genuine connection states.
 """
-from typing import Dict, Tuple
+
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+
+from r3x.core.logger import logger
 
 console = Console()
 
@@ -39,7 +39,7 @@ R3XDEC_TYPO = """
  [bold cyan]╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝[/]
 """
 
-def get_live_status() -> Dict[str, Tuple[str, str]]:
+def get_live_status() -> dict[str, tuple[str, str]]:
     """
     Check the genuine status of:
     - NVIDIA NIM
@@ -49,6 +49,7 @@ def get_live_status() -> Dict[str, Tuple[str, str]]:
     Returns dict mapping component -> (Status Text, Rich Color Style)
     """
     import httpx
+
     from r3x.core.config import settings
     from r3x.mixer.key_store import key_store
 
@@ -85,8 +86,8 @@ def get_live_status() -> Dict[str, Tuple[str, str]]:
             r = httpx.get(f"{settings.hermes_endpoint}/health", timeout=0.8)
             if r.status_code == 200:
                 hermes_alive = True
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Hermes probe check: {e}")
 
         if hermes_alive:
             status["HERMES"] = ("ONLINE & READY", "bold green")
@@ -107,8 +108,8 @@ def get_live_status() -> Dict[str, Tuple[str, str]]:
             r = httpx.get(f"{settings.hexstrike_endpoint}/health", timeout=0.8)
             if r.status_code == 200:
                 hexstrike_alive = True
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"HexStrike probe check: {e}")
 
         if hexstrike_alive:
             status["HEXSTRIKE"] = ("CONNECTED (Port 8888)", "bold green")

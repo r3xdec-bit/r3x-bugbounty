@@ -1,5 +1,6 @@
 from r3x.integrations.hermes_adapter import HermesAdapter
 
+
 def test_hermes_adapter_status():
     adapter = HermesAdapter(endpoint="http://127.0.0.1:9999")  # Non-existent endpoint
     is_online, details = adapter.check_status()

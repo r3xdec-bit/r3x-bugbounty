@@ -2,9 +2,11 @@
 R3X Report Generator Agent
 Compiles findings into submission-ready vulnerability reports.
 """
-from typing import Dict, Any
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.reports.generator import report_generator
+
 
 class ReportGeneratorAgent(BaseAgent):
     def __init__(self):
@@ -13,7 +15,7 @@ class ReportGeneratorAgent(BaseAgent):
             description="Compiles verified findings and evidence into professional HTML/Markdown/JSON/PDF reports."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         project_id = context.get("project_id", "default")
         scan_id = context.get("scan_id")
         fmt = context.get("format", "html")

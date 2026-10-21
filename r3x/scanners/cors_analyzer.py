@@ -2,16 +2,19 @@
 R3X CORS Security Analyzer
 Evaluates Cross-Origin Resource Sharing misconfigurations and credential exposure.
 """
-import httpx
-from typing import Dict, Any, List
+from typing import Any
 from urllib.parse import urlparse
 
+import httpx
+
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
+
 
 class CORSAnalyzer(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"CORSAnalyzer: Auditing Cross-Origin Resource Sharing on {self.target_url}")
 
@@ -28,7 +31,10 @@ class CORSAnalyzer(BaseScanner):
                     "Origin": origin,
                     "User-Agent": "R3X-Security-Audit/1.0"
                 }
-                with httpx.Client(timeout=8.0, verify=False) as client:
+                with httpx.Client(
+                    timeout=8.0,
+                    verify=settings.network.verify_ssl
+                ) as client:  # nosec B501
                     resp = client.get(self.target_url, headers=headers_in)
                     acao = resp.headers.get("access-control-allow-origin", "")
                     acac = resp.headers.get("access-control-allow-credentials", "").lower() == "true"

@@ -3,25 +3,30 @@ R3X Technology Fingerprinting & Version Disclosure Scanner
 Identifies web servers, frameworks, and component versions.
 """
 import re
-import httpx
-from typing import Dict, Any, List
+from typing import Any
 from urllib.parse import urlparse
 
+import httpx
+
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
+
 
 class TechFingerprinter(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"TechFingerprinter: Analyzing stack signatures on {self.target_url}")
 
         scope_guardian.throttle(max_rate_per_sec=5)
         try:
-            with httpx.Client(timeout=8.0, verify=False) as client:
+            with httpx.Client(
+                timeout=8.0,
+                verify=settings.network.verify_ssl
+            ) as client:  # nosec B501
                 resp = client.get(self.target_url, headers={"User-Agent": "R3X-Security-Audit/1.0"})
                 headers = dict(resp.headers)
-                body = resp.text
 
                 raw_req = f"GET / HTTP/1.1\nHost: {urlparse(self.target_url).netloc}"
                 raw_resp = f"HTTP/1.1 {resp.status_code}\n" + "\n".join(f"{k}: {v}" for k, v in headers.items())

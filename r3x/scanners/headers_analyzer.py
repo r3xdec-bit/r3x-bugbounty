@@ -2,23 +2,30 @@
 R3X Security Headers & Transport Security Scanner
 Audits HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy.
 """
-import httpx
-from typing import Dict, Any, List, Optional
+from typing import Any
 from urllib.parse import urlparse
 
+import httpx
+
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
+
 
 class HeadersAnalyzer(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"HeadersAnalyzer: Auditing HTTP security headers on {self.target_url}")
 
         scope_guardian.throttle(max_rate_per_sec=5)
 
         try:
-            with httpx.Client(timeout=10.0, verify=False, follow_redirects=False) as client:
+            with httpx.Client(
+                timeout=10.0,
+                verify=settings.network.verify_ssl,
+                follow_redirects=False
+            ) as client:  # nosec B501
                 resp = client.get(self.target_url, headers={"User-Agent": "R3X-Security-Audit/1.0"})
                 headers = dict(resp.headers)
                 raw_req = f"GET {urlparse(self.target_url).path or '/'} HTTP/1.1\nHost: {urlparse(self.target_url).netloc}\nUser-Agent: R3X-Security-Audit/1.0"

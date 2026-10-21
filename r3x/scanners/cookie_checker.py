@@ -2,22 +2,28 @@
 R3X Cookie Security Checker
 Audits Set-Cookie headers for HttpOnly, Secure, and SameSite attributes.
 """
-import httpx
-from typing import Dict, Any, List
+from typing import Any
 from urllib.parse import urlparse
 
+import httpx
+
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
+
 
 class CookieChecker(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"CookieChecker: Auditing cookie security flags on {self.target_url}")
 
         scope_guardian.throttle(max_rate_per_sec=5)
         try:
-            with httpx.Client(timeout=8.0, verify=False) as client:
+            with httpx.Client(
+                timeout=8.0,
+                verify=settings.network.verify_ssl
+            ) as client:  # nosec B501
                 resp = client.get(self.target_url, headers={"User-Agent": "R3X-Security-Audit/1.0"})
                 raw_cookies = resp.headers.get_list("set-cookie")
 
@@ -59,7 +65,7 @@ class CookieChecker(BaseScanner):
                             severity="MEDIUM",
                             endpoint=self.target_url,
                             technical_explanation=f"Cookie '{cookie_name}' lacks the 'Secure' attribute. Web browsers will transmit this cookie over unencrypted HTTP connections if requested.",
-                            remediation=f"Ensure '; Secure' is enabled for all cookies served over HTTPS.",
+                            remediation="Ensure '; Secure' is enabled for all cookies served over HTTPS.",
                             cwe="CWE-614",
                             cvss=5.0,
                             status="CONFIRMED",

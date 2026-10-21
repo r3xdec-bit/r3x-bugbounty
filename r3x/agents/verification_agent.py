@@ -2,9 +2,11 @@
 R3X False Positive Verification Agent
 Performs dual-model consensus verification on identified security issues.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.mixer.cross_verify import dual_verifier
+
 
 class FalsePositiveVerificationAgent(BaseAgent):
     def __init__(self):
@@ -13,7 +15,7 @@ class FalsePositiveVerificationAgent(BaseAgent):
             description="Filters out false positives and verifies critical findings using dual-model consensus."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         scan_id = context["scan_id"]
         findings_records = context.get("findings", [])
 

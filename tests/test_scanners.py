@@ -1,4 +1,3 @@
-import pytest
 from r3x.scanners.request_importer import HTTPRequestImporter
 
 SAMPLE_HTTP = """POST /api/v1/auth/login HTTP/1.1

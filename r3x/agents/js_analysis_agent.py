@@ -2,9 +2,11 @@
 R3X JavaScript Analysis Agent
 Inspects client-side JavaScript assets for hidden routes, endpoints, and credentials.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.scanners.js_static import JSStaticAnalyzer
+
 
 class JSAnalysisAgent(BaseAgent):
     def __init__(self):
@@ -13,7 +15,7 @@ class JSAnalysisAgent(BaseAgent):
             description="Inspects client-side scripts to extract hidden routes, API paths, and leaked tokens."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         target_url = context["target_url"]
         project_id = context.get("project_id", "default")
         scan_id = context["scan_id"]

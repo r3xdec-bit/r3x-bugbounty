@@ -2,12 +2,14 @@
 R3X Web Security Agent
 Audits HTTP response headers, CORS configurations, Cookie attributes, and TLS/SSL settings.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
-from r3x.scanners.headers_analyzer import HeadersAnalyzer
-from r3x.scanners.cors_analyzer import CORSAnalyzer
 from r3x.scanners.cookie_checker import CookieChecker
+from r3x.scanners.cors_analyzer import CORSAnalyzer
+from r3x.scanners.headers_analyzer import HeadersAnalyzer
 from r3x.scanners.tls_inspect import TLSInspector
+
 
 class WebSecurityAgent(BaseAgent):
     def __init__(self):
@@ -16,12 +18,12 @@ class WebSecurityAgent(BaseAgent):
             description="Audits HTTP security headers, CORS policies, Cookie flags, and TLS configurations."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         target_url = context["target_url"]
         project_id = context.get("project_id", "default")
         scan_id = context["scan_id"]
 
-        findings: List[Dict[str, Any]] = []
+        findings: list[dict[str, Any]] = []
 
         # 1. Headers
         headers_sc = HeadersAnalyzer(target_url, project_id)

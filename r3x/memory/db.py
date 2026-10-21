@@ -2,11 +2,12 @@
 R3X SQLite Persistent Database Engine
 Stores projects, targets, scans, findings, evidence, agent logs, and API consumption.
 """
-import sqlite3
 import json
+import sqlite3
+from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timezone
+from typing import Any
 
 from r3x.core.config import settings
 
@@ -108,24 +109,29 @@ CREATE TABLE IF NOT EXISTS api_usage (
 """
 
 class Database:
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         self.db_path = db_path or settings.db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
+    @contextmanager
+    def _get_connection(self):
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
-        return conn
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
 
     def _init_db(self) -> None:
         with self._get_connection() as conn:
             conn.executescript(SCHEMA)
 
     # ------------------ Projects ------------------
-    def create_project(self, project_id: str, name: str, description: str = "") -> Dict[str, Any]:
-        created_at = datetime.now(timezone.utc).isoformat()
+    def create_project(self, project_id: str, name: str, description: str = "") -> dict[str, Any]:
+        created_at = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 "INSERT INTO projects (id, name, description, created_at, status) VALUES (?, ?, ?, ?, 'ACTIVE')",
@@ -133,7 +139,7 @@ class Database:
             )
         return {"id": project_id, "name": name, "description": description, "created_at": created_at}
 
-    def get_project(self, project_id_or_name: str) -> Optional[Dict[str, Any]]:
+    def get_project(self, project_id_or_name: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute(
                 "SELECT * FROM projects WHERE id = ? OR name = ?",
@@ -142,26 +148,26 @@ class Database:
             row = cur.fetchone()
             return dict(row) if row else None
 
-    def list_projects(self) -> List[Dict[str, Any]]:
+    def list_projects(self) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM projects ORDER BY created_at DESC")
             return [dict(r) for r in cur.fetchall()]
 
     # ------------------ Targets & Scopes ------------------
     def add_target(self, target_id: str, project_id: str, url: str, hostname: str, port: int = 443) -> None:
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 "INSERT INTO targets (id, project_id, url, hostname, port, is_in_scope, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)",
                 (target_id, project_id, url, hostname, port, created_at)
             )
 
-    def get_targets(self, project_id: str) -> List[Dict[str, Any]]:
+    def get_targets(self, project_id: str) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM targets WHERE project_id = ?", (project_id,))
             return [dict(r) for r in cur.fetchall()]
 
-    def set_scope(self, scope_id: str, project_id: str, domain: str, allowed: List[str], excluded: List[str], allow_subdomains: bool = True, max_rate: int = 5) -> None:
+    def set_scope(self, scope_id: str, project_id: str, domain: str, allowed: list[str], excluded: list[str], allow_subdomains: bool = True, max_rate: int = 5) -> None:
         with self._get_connection() as conn:
             conn.execute(
                 """INSERT OR REPLACE INTO scopes 
@@ -170,7 +176,7 @@ class Database:
                 (scope_id, project_id, domain, json.dumps(allowed), json.dumps(excluded), 1 if allow_subdomains else 0, max_rate)
             )
 
-    def get_scope(self, project_id: str) -> Optional[Dict[str, Any]]:
+    def get_scope(self, project_id: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM scopes WHERE project_id = ?", (project_id,))
             row = cur.fetchone()
@@ -183,15 +189,15 @@ class Database:
 
     # ------------------ Scans ------------------
     def create_scan(self, scan_id: str, project_id: str, scan_type: str) -> None:
-        start_time = datetime.now(timezone.utc).isoformat()
+        start_time = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 "INSERT INTO scans (id, project_id, scan_type, status, start_time) VALUES (?, ?, ?, 'RUNNING', ?)",
                 (scan_id, project_id, scan_type, start_time)
             )
 
-    def update_scan_status(self, scan_id: str, status: str, summary: Optional[Dict[str, Any]] = None) -> None:
-        end_time = datetime.now(timezone.utc).isoformat() if status in ["COMPLETED", "FAILED"] else None
+    def update_scan_status(self, scan_id: str, status: str, summary: dict[str, Any] | None = None) -> None:
+        end_time = datetime.now(UTC).isoformat() if status in ["COMPLETED", "FAILED"] else None
         summary_str = json.dumps(summary) if summary else None
         with self._get_connection() as conn:
             conn.execute(
@@ -199,13 +205,13 @@ class Database:
                 (status, end_time, summary_str, scan_id)
             )
 
-    def get_scan(self, scan_id: str) -> Optional[Dict[str, Any]]:
+    def get_scan(self, scan_id: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,))
             row = cur.fetchone()
             return dict(row) if row else None
 
-    def list_scans(self, project_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_scans(self, project_id: str | None = None) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             if project_id:
                 cur = conn.execute("SELECT * FROM scans WHERE project_id = ? ORDER BY start_time DESC", (project_id,))
@@ -214,8 +220,8 @@ class Database:
             return [dict(r) for r in cur.fetchall()]
 
     # ------------------ Findings & Evidence ------------------
-    def add_finding(self, finding: Dict[str, Any]) -> None:
-        created_at = datetime.now(timezone.utc).isoformat()
+    def add_finding(self, finding: dict[str, Any]) -> None:
+        created_at = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 """INSERT INTO findings 
@@ -230,8 +236,8 @@ class Database:
                 )
             )
 
-    def add_evidence(self, ev: Dict[str, Any]) -> None:
-        timestamp = datetime.now(timezone.utc).isoformat()
+    def add_evidence(self, ev: dict[str, Any]) -> None:
+        timestamp = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 """INSERT INTO evidence 
@@ -245,7 +251,7 @@ class Database:
                 )
             )
 
-    def list_findings(self, project_id: Optional[str] = None, scan_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_findings(self, project_id: str | None = None, scan_id: str | None = None) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             query = "SELECT * FROM findings WHERE 1=1"
             params = []
@@ -259,7 +265,7 @@ class Database:
             cur = conn.execute(query, params)
             return [dict(r) for r in cur.fetchall()]
 
-    def list_evidence(self, scan_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_evidence(self, scan_id: str | None = None) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
             if scan_id:
                 cur = conn.execute("SELECT * FROM evidence WHERE scan_id = ?", (scan_id,))
@@ -270,19 +276,19 @@ class Database:
     # ------------------ Agent Logs & API Usage ------------------
     def log_agent_action(
         self,
-        scan_id: Optional[str],
+        scan_id: str | None,
         agent_name: str,
         decision: str = "",
         input_summary: str = "",
         output_summary: str = "",
-        decision_reason: Optional[str] = None,
-        in_sum: Optional[str] = None,
-        out_sum: Optional[str] = None
+        decision_reason: str | None = None,
+        in_sum: str | None = None,
+        out_sum: str | None = None
     ) -> None:
         dec = decision_reason or decision
         i_sum = in_sum or input_summary
         o_sum = out_sum or output_summary
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 "INSERT INTO agent_logs (scan_id, agent_name, decision_reason, input_summary, output_summary, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
@@ -290,14 +296,14 @@ class Database:
             )
 
     def log_api_usage(self, provider: str, model: str, prompt_tokens: int, completion_tokens: int, latency_ms: float, cost: float) -> None:
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute(
                 "INSERT INTO api_usage (provider, model, prompt_tokens, completion_tokens, latency_ms, estimated_cost, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (provider, model, prompt_tokens, completion_tokens, latency_ms, cost, timestamp)
             )
 
-    def get_api_usage_summary(self) -> Dict[str, Any]:
+    def get_api_usage_summary(self) -> dict[str, Any]:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT SUM(prompt_tokens) as p, SUM(completion_tokens) as c, SUM(estimated_cost) as cost, COUNT(*) as count FROM api_usage")
             row = cur.fetchone()

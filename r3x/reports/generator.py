@@ -2,18 +2,16 @@
 R3X Professional Report Generation Engine
 Produces executive-ready Bug Bounty reports in HTML, Markdown, JSON, and PDF formats.
 """
-import os
 import json
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+
 from jinja2 import Template
 from rich.console import Console
 from rich.table import Table
 
 from r3x.core.config import settings
 from r3x.memory.db import db
-from r3x.core.logger import logger
 
 console = Console()
 
@@ -148,10 +146,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 class ReportGenerator:
     def create_report(
         self,
-        project_id: Optional[str] = None,
-        scan_id: Optional[str] = None,
+        project_id: str | None = None,
+        scan_id: str | None = None,
         format_type: str = "html",
-        output_path: Optional[str] = None
+        output_path: str | None = None
     ) -> Path:
         """Compile findings and generate report in requested format."""
         project = db.get_project(project_id or "default") or {"id": "default", "name": "Default Project"}
@@ -172,7 +170,7 @@ class ReportGenerator:
 
         context = {
             "version": settings.version,
-            "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "generated_at": datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"),
             "project": project,
             "scan": scan,
             "target": target,

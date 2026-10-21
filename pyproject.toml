@@ -43,3 +43,10 @@ r3x = "r3x.cli.main:entry_point"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["r3x*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+ignore = ["BLE001", "TRY003", "EM101", "EM102"]

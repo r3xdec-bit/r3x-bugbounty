@@ -2,10 +2,12 @@
 R3X CVE Intelligence Agent
 Correlates identified software components and version numbers with known vulnerability databases.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.mixer.models import TaskRole
 from r3x.mixer.router import model_router
+
 
 class CVEIntelligenceAgent(BaseAgent):
     def __init__(self):
@@ -14,7 +16,7 @@ class CVEIntelligenceAgent(BaseAgent):
             description="Correlates component fingerprints and version disclosures with vulnerability databases."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         target_url = context["target_url"]
         scan_id = context["scan_id"]
         findings = context.get("findings", [])

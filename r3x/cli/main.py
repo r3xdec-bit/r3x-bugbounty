@@ -2,20 +2,18 @@
 R3X-BugBounty CLI Main Entry Point
 Powered by Typer & Rich
 """
-import sys
 import shutil
 import uuid
-from typing import Optional
+
 import typer
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 
-from r3x.cli.banner import show_banner, get_live_status
+from r3x.cli.banner import get_live_status, show_banner
 from r3x.cli.repl import run_repl
 from r3x.core.config import settings
-from r3x.mixer.key_store import key_store
 from r3x.memory.db import db
+from r3x.mixer.key_store import key_store
 
 app = typer.Typer(
     name="r3x",
@@ -86,7 +84,7 @@ def project_new(name: str = typer.Argument(..., help="Unique project name"), des
     """Create a new project workspace."""
     p_id = str(uuid.uuid4())[:8]
     try:
-        p = db.create_project(p_id, name, description)
+        db.create_project(p_id, name, description)
         console.print(f"[green]✓ Project '{name}' created successfully (ID: {p_id})[/]")
     except Exception as e:
         console.print(f"[red]Error creating project:[/] {e}")
@@ -147,7 +145,8 @@ def scope_import(
     project: str = typer.Option("default", help="Project name")
 ):
     """Import target scope definitions from a file."""
-    import os, json
+    import json
+    import os
     if not os.path.exists(file_path):
         console.print(f"[red]File not found:[/] {file_path}")
         return
@@ -190,7 +189,7 @@ def scope_import(
 @mixer_app.command("add")
 def mixer_add(
     provider: str = typer.Argument(..., help="Provider: nvidia, openai, openrouter, gemini, ollama, custom"),
-    key: Optional[str] = typer.Option(None, "--key", "-k", help="API Key value (will prompt securely if omitted)"),
+    key: str | None = typer.Option(None, "--key", "-k", help="API Key value (will prompt securely if omitted)"),
     label: str = typer.Option("primary", help="Label for this key")
 ):
     """Register an API key for a specified provider."""
@@ -236,7 +235,7 @@ def mixer_status():
     model_router.display_status()
 
 @mixer_app.command("test")
-def mixer_test(provider: Optional[str] = typer.Option(None, help="Specific provider to test")):
+def mixer_test(provider: str | None = typer.Option(None, help="Specific provider to test")):
     """Perform live probe on configured AI providers."""
     from r3x.mixer.router import model_router
     model_router.test_providers(provider)
@@ -247,7 +246,7 @@ def scan_cmd(
     quick: bool = typer.Option(False, "-quick", "--quick", help="Execute rapid passive and active recon"),
     full: bool = typer.Option(False, "-full", "--full", help="Execute complete multi-agent security assessment"),
     api: bool = typer.Option(False, "-api", "--api", help="Execute specialized API schema & endpoint security analysis"),
-    target: Optional[str] = typer.Option(None, "--target", "-t", help="Target URL"),
+    target: str | None = typer.Option(None, "--target", "-t", help="Target URL"),
     project: str = typer.Option("default", "--project", "-p", help="Project name")
 ):
     """Run an authorized security assessment scan."""
@@ -258,7 +257,7 @@ def scan_cmd(
 @app.command("ai")
 def ai_cmd(
     investigate: bool = typer.Option(True, "--investigate", "-i", help="Run AI analysis on collected targets and findings"),
-    target: Optional[str] = typer.Option(None, "--target", "-t", help="Target URL")
+    target: str | None = typer.Option(None, "--target", "-t", help="Target URL")
 ):
     """Run autonomous AI brain analysis on target surface."""
     from r3x.core.brain import pentest_brain
@@ -272,8 +271,8 @@ def list_agents():
 
 @app.command("findings")
 def show_findings(
-    project: Optional[str] = typer.Option(None, "--project", "-p", help="Filter by project"),
-    scan: Optional[str] = typer.Option(None, "--scan", "-s", help="Filter by scan ID")
+    project: str | None = typer.Option(None, "--project", "-p", help="Filter by project"),
+    scan: str | None = typer.Option(None, "--scan", "-s", help="Filter by scan ID")
 ):
     """Display identified security findings with verified status."""
     findings = db.list_findings(project_id=project, scan_id=scan)
@@ -312,7 +311,7 @@ def show_findings(
     console.print(table)
 
 @app.command("evidence")
-def show_evidence(scan: Optional[str] = typer.Option(None, "--scan", "-s", help="Filter by scan ID")):
+def show_evidence(scan: str | None = typer.Option(None, "--scan", "-s", help="Filter by scan ID")):
     """Inspect sanitized evidence cryptographically hashed."""
     ev_list = db.list_evidence(scan_id=scan)
     if not ev_list:
@@ -355,7 +354,7 @@ def history():
     console.print(table)
 
 @app.command("resume")
-def resume_scan(scan_id: Optional[str] = typer.Argument(None, help="Scan ID to resume")):
+def resume_scan(scan_id: str | None = typer.Argument(None, help="Scan ID to resume")):
     """Resume a paused or interrupted scan."""
     from r3x.agents.hermes_master import hermes_master
     hermes_master.resume_scan(scan_id)
@@ -375,9 +374,9 @@ def generate_report(
     markdown: bool = typer.Option(False, "--markdown", "--md", help="Generate Markdown report"),
     json_out: bool = typer.Option(False, "--json", help="Generate JSON report"),
     pdf: bool = typer.Option(False, "--pdf", help="Generate PDF report"),
-    scan: Optional[str] = typer.Option(None, "--scan", "-s", help="Scan ID"),
-    project: Optional[str] = typer.Option(None, "--project", "-p", help="Project name or ID"),
-    out: Optional[str] = typer.Option(None, "--out", "-o", help="Output file path")
+    scan: str | None = typer.Option(None, "--scan", "-s", help="Scan ID"),
+    project: str | None = typer.Option(None, "--project", "-p", help="Project name or ID"),
+    out: str | None = typer.Option(None, "--out", "-o", help="Output file path")
 ):
     """Export security assessment report in multiple formats."""
     from r3x.reports.generator import report_generator

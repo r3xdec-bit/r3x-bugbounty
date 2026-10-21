@@ -1,9 +1,11 @@
-import tempfile
 import os
+import tempfile
 from pathlib import Path
-from r3x.memory.db import Database
-from r3x.evidence.sanitizer import sanitize_evidence
+
 from r3x.evidence.hashing import compute_sha256
+from r3x.evidence.sanitizer import sanitize_evidence
+from r3x.memory.db import Database
+
 
 def test_sanitizer():
     dirty_input = "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.doNotLeakThis\npassword: supersecret123\nconnect.sid=s%3Aabcdef1234567890"

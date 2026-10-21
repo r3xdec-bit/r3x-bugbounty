@@ -1,6 +1,8 @@
 import pytest
-from r3x.security.scope_guardian import ScopeGuardian
+
 from r3x.core.exceptions import ScopeViolationError
+from r3x.security.scope_guardian import ScopeGuardian
+
 
 def test_scope_guardian_allowlist():
     guardian = ScopeGuardian()

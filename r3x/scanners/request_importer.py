@@ -3,15 +3,12 @@ R3X HTTP Request File Importer
 Parses raw HTTP requests (.req, .http, Burp Suite export) for automated security assessment.
 """
 import os
-from typing import Dict, Any, Tuple
-from urllib.parse import urlparse
+from typing import Any
 
-from r3x.security.scope_guardian import scope_guardian
-from r3x.core.exceptions import ScopeViolationError
 
 class HTTPRequestImporter:
     @staticmethod
-    def parse_raw_request_file(file_path: str, base_scheme: str = "https") -> Dict[str, Any]:
+    def parse_raw_request_file(file_path: str, base_scheme: str = "https") -> dict[str, Any]:
         """
         Parse raw RFC 7230 HTTP request string from file.
         Returns dictionary:
@@ -33,7 +30,7 @@ class HTTPRequestImporter:
         return HTTPRequestImporter.parse_raw_text(raw_text, base_scheme)
 
     @staticmethod
-    def parse_raw_text(raw_text: str, base_scheme: str = "https") -> Dict[str, Any]:
+    def parse_raw_text(raw_text: str, base_scheme: str = "https") -> dict[str, Any]:
         lines = raw_text.splitlines()
         if not lines:
             raise ValueError("HTTP request file is empty")
@@ -46,7 +43,7 @@ class HTTPRequestImporter:
         method = request_line[0].upper()
         path = request_line[1]
 
-        headers: Dict[str, str] = {}
+        headers: dict[str, str] = {}
         body_lines = []
         is_body = False
 
@@ -61,7 +58,7 @@ class HTTPRequestImporter:
                     headers[key.strip().lower()] = val.strip()
 
         host = headers.get("host", "localhost")
-        if path.startswith("http://") or path.startswith("https://"):
+        if path.startswith(("http://", "https://")):
             full_url = path
         else:
             full_url = f"{base_scheme}://{host}{path if path.startswith('/') else '/' + path}"

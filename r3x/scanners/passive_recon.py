@@ -3,15 +3,16 @@ R3X Passive Reconnaissance & DNS Intelligence Scanner
 Gathers DNS records, nameservers, mail servers, and verifies domain health.
 """
 import socket
-from typing import Dict, Any, List
+from typing import Any
 from urllib.parse import urlparse
 
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
+
 
 class PassiveReconScanner(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         parsed = urlparse(self.target_url)
         hostname = parsed.hostname or self.target_url

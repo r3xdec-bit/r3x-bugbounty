@@ -3,14 +3,16 @@ R3X JavaScript Static Analysis Scanner
 Parses JavaScript files to extract internal API endpoints, hidden routes, and leaked credentials.
 """
 import re
+from typing import Any
+from urllib.parse import urljoin
+
 import httpx
 from bs4 import BeautifulSoup
-from typing import Dict, Any, List, Set
-from urllib.parse import urljoin, urlparse
 
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
 
 # Regex patterns for sensitive tokens embedded in client-side code
 SECRET_PATTERNS = [
@@ -25,15 +27,18 @@ SECRET_PATTERNS = [
 API_ENDPOINT_PATTERN = re.compile(r'["\'](/api/v?[0-9]?/[a-zA-Z0-9_\-\/]+)["\']')
 
 class JSStaticAnalyzer(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"JSStaticAnalyzer: Scraping and inspecting JavaScript files on {self.target_url}")
 
         scope_guardian.throttle(max_rate_per_sec=5)
-        js_urls: Set[str] = set()
+        js_urls: set[str] = set()
 
         try:
-            with httpx.Client(timeout=8.0, verify=False) as client:
+            with httpx.Client(
+                timeout=8.0,
+                verify=settings.network.verify_ssl
+            ) as client:  # nosec B501
                 resp = client.get(self.target_url, headers={"User-Agent": "R3X-Security-Audit/1.0"})
                 soup = BeautifulSoup(resp.text, "html.parser")
                 for script in soup.find_all("script"):
@@ -44,8 +49,8 @@ class JSStaticAnalyzer(BaseScanner):
                         try:
                             scope_guardian.validate_target(full_url, self.project_id)
                             js_urls.add(full_url)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"Target scope validation for {full_url}: {e}")
 
                 # Scan up to 5 discovered JS files
                 for js_url in list(js_urls)[:5]:
@@ -76,7 +81,7 @@ class JSStaticAnalyzer(BaseScanner):
                         # 2. Extract API Endpoints
                         endpoints = set(API_ENDPOINT_PATTERN.findall(content))
                         if endpoints:
-                            endpoints_list = sorted(list(endpoints))[:10]
+                            endpoints_list = sorted(endpoints)[:10]
                             findings.append(self.record_finding(
                                 scan_id=scan_id,
                                 title=f"Discovered API Endpoints in JavaScript ({len(endpoints)} routes)",

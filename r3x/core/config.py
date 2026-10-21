@@ -1,10 +1,9 @@
 """
 R3X Core Configuration & Settings Management
 """
-import os
 import json
 from pathlib import Path
-from typing import Dict, Any, Optional
+
 from pydantic import BaseModel, Field
 
 DEFAULT_R3X_HOME = Path.home() / ".r3x"
@@ -34,7 +33,7 @@ class Settings(BaseModel):
     evidence_dir: Path = DEFAULT_R3X_HOME / "evidence"
     
     # Integrations default configs
-    hermes_path: Optional[str] = None
+    hermes_path: str | None = None
     hermes_endpoint: str = "http://127.0.0.1:8686"
     hexstrike_endpoint: str = "http://127.0.0.1:8888"
     
@@ -48,7 +47,7 @@ class Settings(BaseModel):
         self.evidence_dir.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def load(cls, config_file: Optional[Path] = None) -> "Settings":
+    def load(cls, config_file: Path | None = None) -> "Settings":
         cfg_file = config_file or (DEFAULT_R3X_HOME / "config.json")
         if cfg_file.exists():
             try:
@@ -56,12 +55,13 @@ class Settings(BaseModel):
                     data = json.load(f)
                     return cls.model_validate(data)
             except Exception:
-                pass
+                instance = cls()
+                return instance
         instance = cls()
         instance.ensure_directories()
         return instance
 
-    def save(self, config_file: Optional[Path] = None) -> None:
+    def save(self, config_file: Path | None = None) -> None:
         cfg_file = config_file or (self.base_dir / "config.json")
         self.ensure_directories()
         with open(cfg_file, "w", encoding="utf-8") as f:

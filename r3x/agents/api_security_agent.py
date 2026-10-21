@@ -2,9 +2,11 @@
 R3X API Security Agent
 Specialized in auditing REST & GraphQL APIs, OpenAPI schemas, and endpoint access controls.
 """
-from typing import Dict, Any, List
+from typing import Any
+
 from r3x.agents.base import BaseAgent
 from r3x.scanners.api_schema import APISchemaScanner
+
 
 class APISecurityAgent(BaseAgent):
     def __init__(self):
@@ -13,7 +15,7 @@ class APISecurityAgent(BaseAgent):
             description="Audits REST and GraphQL APIs, discovers exposed OpenAPI schemas, and verifies controls."
         )
 
-    def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def run(self, context: dict[str, Any]) -> dict[str, Any]:
         target_url = context["target_url"]
         project_id = context.get("project_id", "default")
         scan_id = context["scan_id"]

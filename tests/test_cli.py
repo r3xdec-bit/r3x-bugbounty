@@ -1,4 +1,5 @@
 from typer.testing import CliRunner
+
 from r3x.cli.main import app
 
 runner = CliRunner()

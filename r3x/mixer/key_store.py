@@ -2,20 +2,23 @@
 R3X Encrypted Keystore
 Safely stores and manages multi-provider API keys using encrypted local storage.
 """
-import os
-import json
 import base64
-import uuid
 import hashlib
-from datetime import datetime, timezone
+import json
+import os
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from r3x.core.config import settings
 from r3x.core.exceptions import KeyStoreError
+from r3x.core.logger import logger
+
 
 class APIKeyEntry:
     def __init__(
@@ -24,23 +27,23 @@ class APIKeyEntry:
         provider: str,
         key_value: str,
         label: str = "default",
-        added_at: Optional[str] = None,
+        added_at: str | None = None,
         is_active: bool = True,
         usage_count: int = 0,
         failed_count: int = 0,
-        last_used: Optional[str] = None
+        last_used: str | None = None
     ):
         self.key_id = key_id
         self.provider = provider.lower()
         self.key_value = key_value
         self.label = label
-        self.added_at = added_at or datetime.now(timezone.utc).isoformat()
+        self.added_at = added_at or datetime.now(UTC).isoformat()
         self.is_active = is_active
         self.usage_count = usage_count
         self.failed_count = failed_count
         self.last_used = last_used
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "key_id": self.key_id,
             "provider": self.provider,
@@ -54,7 +57,7 @@ class APIKeyEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "APIKeyEntry":
+    def from_dict(cls, data: dict[str, Any]) -> "APIKeyEntry":
         return cls(**data)
 
     def mask(self) -> str:
@@ -65,10 +68,10 @@ class APIKeyEntry:
         return f"{val[:4]}...{val[-4:]}"
 
 class KeyStore:
-    def __init__(self, vault_path: Optional[Path] = None):
+    def __init__(self, vault_path: Path | None = None):
         self.vault_path = vault_path or settings.keystore_path
-        self._key_cache: Dict[str, List[APIKeyEntry]] = {}
-        self._fernet: Optional[Fernet] = None
+        self._key_cache: dict[str, list[APIKeyEntry]] = {}
+        self._fernet: Fernet | None = None
         self._init_encryption()
         self._load()
 
@@ -81,11 +84,11 @@ class KeyStore:
                     with open(candidate, "r") as f:
                         machine_id = f.read().strip()
                         break
-                except Exception:
-                    pass
+                except (OSError, UnicodeDecodeError) as e:
+                    logger.debug("Cannot read machine-id candidate %s: %s", candidate, e)
         user = os.environ.get("USER", "r3xuser")
         home = str(Path.home())
-        return f"{machine_id}:{user}:{home}".encode("utf-8")
+        return f"{machine_id}:{user}:{home}".encode()
 
     def _init_encryption(self) -> None:
         """Derive encryption key via PBKDF2."""
@@ -104,8 +107,8 @@ class KeyStore:
         if not self._fernet:
             raise KeyStoreError("Keystore encryption not initialized")
 
-        raw_data: List[Dict[str, Any]] = []
-        for provider, entries in self._key_cache.items():
+        raw_data: list[dict[str, Any]] = []
+        for entries in self._key_cache.values():
             for e in entries:
                 raw_data.append(e.to_dict())
 
@@ -170,7 +173,7 @@ class KeyStore:
 
     def remove_key(self, key_id: str) -> bool:
         """Remove a key by its ID."""
-        for provider, entries in self._key_cache.items():
+        for entries in self._key_cache.values():
             for i, entry in enumerate(entries):
                 if entry.key_id == key_id:
                     entries.pop(i)
@@ -178,7 +181,7 @@ class KeyStore:
                     return True
         return False
 
-    def get_keys(self, provider: str, active_only: bool = True) -> List[APIKeyEntry]:
+    def get_keys(self, provider: str, active_only: bool = True) -> list[APIKeyEntry]:
         """Get all keys for a specific provider."""
         provider = provider.strip().lower()
         entries = self._key_cache.get(provider, [])
@@ -186,7 +189,7 @@ class KeyStore:
             return [e for e in entries if e.is_active]
         return entries
 
-    def get_active_key(self, provider: str) -> Optional[APIKeyEntry]:
+    def get_active_key(self, provider: str) -> APIKeyEntry | None:
         """Retrieve the best active key with load-balancing (least recently used)."""
         entries = self.get_keys(provider, active_only=True)
         if not entries:
@@ -195,7 +198,7 @@ class KeyStore:
         sorted_entries = sorted(entries, key=lambda x: (x.failed_count, x.usage_count))
         chosen = sorted_entries[0]
         chosen.usage_count += 1
-        chosen.last_used = datetime.now(timezone.utc).isoformat()
+        chosen.last_used = datetime.now(UTC).isoformat()
         self._save()
         return chosen
 
@@ -219,14 +222,14 @@ class KeyStore:
                     self._save()
                     return
 
-    def list_all(self) -> List[APIKeyEntry]:
+    def list_all(self) -> list[APIKeyEntry]:
         """List all keys across all providers."""
         all_keys = []
         for entries in self._key_cache.values():
             all_keys.extend(entries)
         return all_keys
 
-    def get_status_summary(self) -> Dict[str, Any]:
+    def get_status_summary(self) -> dict[str, Any]:
         """Get high-level summary of keystore contents."""
         total = sum(len(entries) for entries in self._key_cache.values())
         active = sum(sum(1 for e in entries if e.is_active) for entries in self._key_cache.values())

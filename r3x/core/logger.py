@@ -1,11 +1,11 @@
 """
 R3X Logging and Audit Recording with Automatic Redaction
 """
-import re
 import logging
-from datetime import datetime, timezone
+import re
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
+
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -38,7 +38,7 @@ class RedactingFormatter(logging.Formatter):
         original = super().format(record)
         return redact_secrets(original)
 
-def get_logger(name: str = "r3x", log_file: Optional[Path] = None) -> logging.Logger:
+def get_logger(name: str = "r3x", log_file: Path | None = None) -> logging.Logger:
     """Obtain a logger instance with Rich terminal handler and audit file."""
     logger = logging.getLogger(name)
     if logger.handlers:
@@ -75,7 +75,7 @@ def audit_log(event_type: str, target: str, actor: str, details: str) -> None:
     log_file = settings.audit_log_path
     log_file.parent.mkdir(parents=True, exist_ok=True)
     
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     clean_details = redact_secrets(details)
     entry = f"{timestamp} | EVENT: {event_type} | ACTOR: {actor} | TARGET: {target} | {clean_details}\n"
     

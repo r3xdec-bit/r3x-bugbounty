@@ -2,8 +2,9 @@
 R3X AI Mixer Provider & Task Definitions
 """
 from enum import Enum
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel
+
 
 class TaskRole(str, Enum):
     CLASSIFICATION = "classification"       # Fast model for triage & categorization
@@ -16,13 +17,13 @@ class ProviderConfig(BaseModel):
     name: str
     base_url: str
     default_model: str
-    supported_models: List[str]
+    supported_models: list[str]
     input_cost_per_m: float = 0.0   # USD per 1M tokens
     output_cost_per_m: float = 0.0  # USD per 1M tokens
     max_rpm: int = 60               # Requests per minute rate limit
     requires_key: bool = True
 
-DEFAULT_PROVIDERS: Dict[str, ProviderConfig] = {
+DEFAULT_PROVIDERS: dict[str, ProviderConfig] = {
     "nvidia": ProviderConfig(
         name="nvidia",
         base_url="https://integrate.api.nvidia.com/v1",

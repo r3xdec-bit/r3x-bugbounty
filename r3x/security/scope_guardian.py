@@ -4,15 +4,15 @@ Enforces Domain Allowlist, URL Exclusions, Redirect Safety, Rate Limiting, and E
 All security scans MUST pass through Scope Guardian before execution.
 """
 import fnmatch
-import time
 import socket
+import time
+from typing import Any
 from urllib.parse import urlparse
-from typing import List, Dict, Any, Optional, Tuple
 
-from r3x.core.config import settings
-from r3x.core.exceptions import ScopeViolationError, RateLimitExceededError
-from r3x.core.logger import logger, audit_log
+from r3x.core.exceptions import ScopeViolationError
+from r3x.core.logger import audit_log, logger
 from r3x.memory.db import db
+
 
 class ScopeGuardian:
     def __init__(self):
@@ -36,8 +36,8 @@ class ScopeGuardian:
     def validate_target(
         self,
         url_or_domain: str,
-        project_id: Optional[str] = None,
-        scope_override: Optional[Dict[str, Any]] = None
+        project_id: str | None = None,
+        scope_override: dict[str, Any] | None = None
     ) -> bool:
         """
         Evaluate if a target URL or host strictly resides within the authorized scope.
@@ -99,7 +99,7 @@ class ScopeGuardian:
 
         return True
 
-    def check_redirect(self, original_url: str, redirected_url: str, project_id: Optional[str] = None) -> bool:
+    def check_redirect(self, original_url: str, redirected_url: str, project_id: str | None = None) -> bool:
         """
         Verify that an HTTP redirect does NOT escape the authorized domain.
         """

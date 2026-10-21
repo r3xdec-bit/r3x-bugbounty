@@ -2,13 +2,15 @@
 R3X API Schema & Endpoint Security Scanner
 Detects exposed Swagger/OpenAPI documentation, GraphQL introspection, and sensitive routes.
 """
-import httpx
-from typing import Dict, Any, List
+from typing import Any
 from urllib.parse import urljoin, urlparse
 
+import httpx
+
+from r3x.core.config import settings
+from r3x.core.logger import logger
 from r3x.scanners.base import BaseScanner
 from r3x.security.scope_guardian import scope_guardian
-from r3x.core.logger import logger
 
 KNOWN_API_DOC_PATHS = [
     "/swagger.json",
@@ -24,7 +26,7 @@ KNOWN_API_DOC_PATHS = [
 ]
 
 class APISchemaScanner(BaseScanner):
-    def scan(self, scan_id: str) -> List[Dict[str, Any]]:
+    def scan(self, scan_id: str) -> list[dict[str, Any]]:
         findings = []
         logger.info(f"APISchemaScanner: Checking for exposed API schemas on {self.target_url}")
 
@@ -34,12 +36,16 @@ class APISchemaScanner(BaseScanner):
             target_ep = urljoin(self.target_url, path)
             try:
                 scope_guardian.validate_target(target_ep, self.project_id)
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Target scope validation for {target_ep} bypassed: {e}")
                 continue
 
             try:
                 scope_guardian.throttle(max_rate_per_sec=5)
-                with httpx.Client(timeout=6.0, verify=False) as client:
+                with httpx.Client(
+                    timeout=6.0,
+                    verify=settings.network.verify_ssl
+                ) as client:  # nosec B501
                     resp = client.get(target_ep, headers={"User-Agent": "R3X-Security-Audit/1.0"})
 
                     if resp.status_code == 200:
