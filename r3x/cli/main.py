@@ -234,6 +234,25 @@ def mixer_status():
     from r3x.mixer.router import model_router
     model_router.display_status()
 
+@mixer_app.command("budget")
+def mixer_budget(
+    limit: float | None = typer.Option(None, "--limit", "-l", help="Set maximum spending cap in USD")
+):
+    """View or configure Budget Guard spending thresholds."""
+    from r3x.mixer.budget_guard import budget_guard
+    if limit is not None:
+        budget_guard.set_budget(limit)
+        console.print(f"[bold green]✓ Budget cap successfully updated to ${limit:.2f} USD[/]")
+
+    status = budget_guard.get_budget_status()
+    console.print("\n[bold cyan]=== R3X AI Budget Guard Status ===[/]\n")
+    console.print(f"[bold white]Maximum Allowed Cap:[/] ${status['max_budget_usd']:.2f} USD")
+    console.print(f"[bold white]Total Spent:[/]         ${status['total_spent_usd']:.4f} USD ({status['percentage_used']}%)")
+    console.print(f"[bold white]Remaining Balance:[/]   [bold green]${status['remaining_usd']:.4f} USD[/]")
+    if status["is_exhausted"]:
+        console.print("[bold red]⚠ BUDGET EXHAUSTED: New API calls will be blocked until cap is increased or reset.[/]")
+    console.print()
+
 @mixer_app.command("test")
 def mixer_test(provider: str | None = typer.Option(None, help="Specific provider to test")):
     """Perform live probe on configured AI providers."""

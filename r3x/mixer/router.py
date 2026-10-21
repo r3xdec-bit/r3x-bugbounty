@@ -13,6 +13,8 @@ from r3x.memory.db import db
 from r3x.mixer.key_store import key_store
 from r3x.mixer.models import DEFAULT_PROVIDERS, TaskRole
 from r3x.mixer.providers import provider_client
+from r3x.mixer.scoring import model_scoring
+from r3x.mixer.budget_guard import budget_guard, BudgetExceededError
 
 console = Console()
 
@@ -80,14 +82,32 @@ class ModelRouter:
         preferred_provider: str | None = None
     ) -> dict[str, Any]:
         """
-        Execute request with automatic provider fallback, load-balancing, and usage accounting.
+        Execute request with dynamic fitness ranking, budget caps, automatic provider fallback,
+        load-balancing, and context preservation across attempts.
         """
-        providers_to_try = []
+        # 1. Budget Guard Check
+        budget_guard.check_can_spend(estimated_next_cost=0.002)
+
+        # 2. Intelligent Dynamic Ranking
+        ranked_candidates = model_scoring.rank_candidates(role)
+        ranked_providers = [c[0] for c in ranked_candidates]
+
+        providers_to_try: list[str] = []
         if preferred_provider:
             providers_to_try.append(preferred_provider.lower())
+
+        # Append dynamically ranked candidates first
+        for p in ranked_providers:
+            if p not in providers_to_try:
+                providers_to_try.append(p)
+
+        # Append any remaining fallback options
         for p in FALLBACK_ORDER:
             if p not in providers_to_try:
                 providers_to_try.append(p)
+
+        # Preserve context messages across all fallback attempts
+        preserved_messages = list(messages)
 
         for prov in providers_to_try:
             # Check if provider has active keys or doesn't require keys (e.g. ollama)
@@ -108,7 +128,7 @@ class ModelRouter:
                     provider_name=prov,
                     api_key=key_val,
                     model=model_name,
-                    messages=messages,
+                    messages=preserved_messages,
                     temperature=temperature,
                     max_tokens=max_tokens
                 )
@@ -131,7 +151,7 @@ class ModelRouter:
                 return res
 
             except Exception as e:
-                logger.warning(f"Provider {prov} failed: {e}. Attempting fallback...")
+                logger.warning(f"Provider '{prov}' failed: {e}. Preserving context & attempting smart fallback...")
                 if active_key:
                     key_store.mark_key_failure(active_key.key_id)
 

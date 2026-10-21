@@ -219,15 +219,24 @@ download_github_release() {
     local repo="$1"
     local pattern="$2"
     local bin_name="$3"
+    local fallback_url="$4"
     local target_path="${BIN_DIR}/${bin_name}"
 
     log_info "Downloading ${bin_name} from ${repo}..."
-    local download_url
-    download_url=$(curl -s "https://api.github.com/repos/${repo}/releases/latest" \
+    local download_url=""
+    
+    # Try GitHub API first
+    download_url=$(curl -s "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null \
         | grep "browser_download_url" \
         | grep -i "${pattern}" \
         | head -n 1 \
         | cut -d '"' -f 4)
+
+    # Use direct fallback URL if GitHub API rate-limited or unavailable
+    if [ -z "$download_url" ] && [ -n "$fallback_url" ]; then
+        log_info "GitHub API limit reached or asset not found; using official direct fallback: ${fallback_url}"
+        download_url="$fallback_url"
+    fi
 
     if [ -z "$download_url" ]; then
         log_error "Failed to find release asset for ${bin_name} (${repo}). Check network or API limits."
@@ -248,7 +257,7 @@ download_github_release() {
         found_bin=$(find "${extract_dir}" -type f -name "${bin_name}" | head -n 1)
         if [ -n "$found_bin" ]; then
             cp "${found_bin}" "${target_path}"
-            chmod +x "${target_path}"
+            chmod 755 "${target_path}"
             ln -sf "${target_path}" "${INSTALL_PREFIX}/${bin_name}" 2>/dev/null || true
             log_success "Successfully installed ${bin_name} to ${target_path}"
             rm -rf "${temp_archive}" "${extract_dir}"
@@ -263,27 +272,32 @@ download_github_release() {
     return 1
 }
 
-# Install missing Go / Security binaries
+# Install missing Go / Security binaries with fallbacks
 for tool in "${MISSING_TOOLS[@]}"; do
     case "$tool" in
         nuclei)
-            download_github_release "projectdiscovery/nuclei" "linux_amd64.zip" "nuclei"
+            download_github_release "projectdiscovery/nuclei" "linux_amd64.zip" "nuclei" \
+                "https://github.com/projectdiscovery/nuclei/releases/download/v3.3.7/nuclei_3.3.7_linux_amd64.zip"
             ;;
         httpx)
-            download_github_release "projectdiscovery/httpx" "linux_amd64.zip" "httpx"
+            download_github_release "projectdiscovery/httpx" "linux_amd64.zip" "httpx" \
+                "https://github.com/projectdiscovery/httpx/releases/download/v1.6.9/httpx_1.6.9_linux_amd64.zip"
             ;;
         subfinder)
-            download_github_release "projectdiscovery/subfinder" "linux_amd64.zip" "subfinder"
+            download_github_release "projectdiscovery/subfinder" "linux_amd64.zip" "subfinder" \
+                "https://github.com/projectdiscovery/subfinder/releases/download/v2.6.8/subfinder_2.6.8_linux_amd64.zip"
             ;;
         katana)
-            download_github_release "projectdiscovery/katana" "linux_amd64.zip" "katana"
+            download_github_release "projectdiscovery/katana" "linux_amd64.zip" "katana" \
+                "https://github.com/projectdiscovery/katana/releases/download/v1.1.2/katana_1.1.2_linux_amd64.zip"
             ;;
         dnsx)
-            download_github_release "projectdiscovery/dnsx" "linux_amd64.zip" "dnsx"
+            download_github_release "projectdiscovery/dnsx" "linux_amd64.zip" "dnsx" \
+                "https://github.com/projectdiscovery/dnsx/releases/download/v1.2.2/dnsx_1.2.2_linux_amd64.zip"
             ;;
         amass)
-            download_github_release "owasp-amass/amass" "linux_amd64.zip" "amass" || \
-            download_github_release "owasp-amass/amass" "linux_amd64.tar.gz" "amass"
+            download_github_release "owasp-amass/amass" "linux_amd64.tar.gz" "amass" \
+                "https://github.com/owasp-amass/amass/releases/download/v4.2.0/amass_Linux_amd64.tar.gz"
             ;;
         sslyze)
             log_info "SSLyze will be installed via Python Virtualenv."
