@@ -2,11 +2,21 @@
 R3X Core Configuration & Settings Management
 """
 import json
+import os
 from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 DEFAULT_R3X_HOME = Path.home() / ".r3x"
+
+# Ensure local project bin and ~/.local/bin are in system PATH for security tool discovery
+_project_bin = Path(__file__).resolve().parent.parent.parent / "bin"
+_user_local_bin = Path.home() / ".local" / "bin"
+_current_path = os.environ.get("PATH", "")
+_extra_paths = [str(_project_bin), str(_user_local_bin)]
+for ep in _extra_paths:
+    if ep not in _current_path:
+        os.environ["PATH"] = f"{ep}:{os.environ.get('PATH', '')}"
 
 class NetworkConfig(BaseModel):
     user_agent: str = "R3X-BugBounty-Security-Audit/1.0 (+https://github.com/r3xdec/r3x-bugbounty)"

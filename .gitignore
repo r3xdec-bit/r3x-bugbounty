@@ -60,3 +60,7 @@ vault.enc
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Binaries directory
+bin/
+

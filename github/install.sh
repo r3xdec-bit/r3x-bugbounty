@@ -198,15 +198,8 @@ if [[ " ${MISSING_TOOLS[*]} " =~ " nmap " ]]; then
     SYS_DEPS+=("nmap")
 fi
 
-# Whatweb via package manager if available
-if [[ " ${MISSING_TOOLS[*]} " =~ " whatweb " ]]; then
-    if [ "$PKG_MGR" == "apt" ]; then
-        SYS_DEPS+=("whatweb")
-    elif [ "$PKG_MGR" == "pacman" ]; then
-        # On Arch whatweb is in AUR, so pacman won't have it directly
-        :
-    fi
-fi
+# Whatweb is installed cleanly via official repository link in Section 5
+# No sudo package manager needed
 
 if [ ${#SYS_DEPS[@]} -gt 0 ]; then
     install_system_pkgs "${SYS_DEPS[@]}"

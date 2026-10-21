@@ -27,12 +27,12 @@ DEFAULT_PROVIDERS: dict[str, ProviderConfig] = {
     "nvidia": ProviderConfig(
         name="nvidia",
         base_url="https://integrate.api.nvidia.com/v1",
-        default_model="meta/llama-3.3-70b-instruct",
+        default_model="meta/llama-3.2-11b-vision-instruct",
         supported_models=[
-            "meta/llama-3.3-70b-instruct",
-            "meta/llama-3.1-8b-instruct",
-            "mistralai/mixtral-8x22b-instruct",
-            "deepseek-ai/deepseek-r1"
+            "meta/llama-3.2-11b-vision-instruct",
+            "meta/llama-3.2-90b-vision-instruct",
+            "deepseek-ai/deepseek-v4.1-flash",
+            "mistralai/mistral-large-2-instruct"
         ],
         input_cost_per_m=0.70,
         output_cost_per_m=0.90,

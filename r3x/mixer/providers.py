@@ -14,7 +14,7 @@ from r3x.mixer.models import DEFAULT_PROVIDERS
 
 
 class ProviderClient:
-    def __init__(self, timeout: float = 30.0):
+    def __init__(self, timeout: float = 90.0):
         self.timeout = timeout
 
     async def chat_completion(
@@ -63,7 +63,7 @@ class ProviderClient:
 
         for attempt in range(1, retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                async with httpx.AsyncClient(timeout=self.timeout, http2=True) as client:
                     resp = await client.post(url, headers=headers, json=payload)
 
                     if resp.status_code == 429:
@@ -114,9 +114,26 @@ class ProviderClient:
         raise ProviderError(f"Exhausted {retries} retries on {provider_name}: {last_exception}")
 
     async def ping_provider(self, provider_name: str, api_key: str) -> tuple[bool, str]:
-        """Test health by sending a minimal token query."""
+        """Test provider health by checking endpoint authentication and models."""
         try:
             cfg = DEFAULT_PROVIDERS[provider_name.lower()]
+            start_t = time.time()
+            models_url = f"{cfg.base_url.rstrip('/')}/models"
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+            if provider_name.lower() == "openrouter":
+                headers["HTTP-Referer"] = "https://github.com/r3xdec/r3x-bugbounty"
+                headers["X-Title"] = "R3X-BugBounty"
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(models_url, headers=headers)
+                elapsed_ms = (time.time() - start_t) * 1000.0
+
+                if resp.status_code == 200:
+                    return True, f"Connected & Authenticated ({elapsed_ms:.0f}ms)"
+                elif resp.status_code in (401, 403):
+                    return False, f"Authentication Failed (HTTP {resp.status_code})"
+
+            # Fallback to chat completion if /models is unsupported
             res = await self.chat_completion(
                 provider_name=provider_name,
                 api_key=api_key,
