@@ -6,6 +6,7 @@ import http.server
 import threading
 import time
 
+
 class VulnerableHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         # Silence standard HTTP access logs during test runs

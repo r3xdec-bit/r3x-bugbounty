@@ -10,11 +10,11 @@ from rich.table import Table
 
 from r3x.core.logger import logger
 from r3x.memory.db import db
+from r3x.mixer.budget_guard import budget_guard
 from r3x.mixer.key_store import key_store
 from r3x.mixer.models import DEFAULT_PROVIDERS, TaskRole
 from r3x.mixer.providers import provider_client
 from r3x.mixer.scoring import model_scoring
-from r3x.mixer.budget_guard import budget_guard, BudgetExceededError
 
 console = Console()
 

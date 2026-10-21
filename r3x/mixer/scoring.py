@@ -2,9 +2,9 @@
 R3X Dynamic Model Scoring & Intelligent Selection Engine
 Calculates fitness scores for AI models based on speed, token cost, task fit, and provider stability.
 """
-from typing import Dict, Any, List, Tuple
-from r3x.mixer.models import TaskRole, DEFAULT_PROVIDERS, ProviderConfig
 from r3x.mixer.key_store import key_store
+from r3x.mixer.models import DEFAULT_PROVIDERS, TaskRole
+
 
 class ModelScoringEngine:
     def __init__(self):
@@ -90,7 +90,7 @@ class ModelScoringEngine:
 
         return round(total_score, 3)
 
-    def rank_candidates(self, role: TaskRole) -> List[Tuple[str, str, float]]:
+    def rank_candidates(self, role: TaskRole) -> list[tuple[str, str, float]]:
         """
         Rank all configured providers and models for a given task role.
         Returns: [(provider_name, model_name, fitness_score), ...] sorted descending.

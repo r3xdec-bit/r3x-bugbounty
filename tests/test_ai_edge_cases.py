@@ -1,13 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, patch
-import httpx
 
-from r3x.mixer.models import TaskRole, DEFAULT_PROVIDERS
-from r3x.mixer.providers import ProviderClient
-from r3x.mixer.router import ModelRouter
-from r3x.mixer.budget_guard import BudgetGuard, BudgetExceededError
-from r3x.mixer.scoring import ModelScoringEngine
+import httpx
+import pytest
+
 from r3x.core.exceptions import ProviderError
+from r3x.mixer.budget_guard import BudgetExceededError, BudgetGuard
+from r3x.mixer.models import TaskRole
+from r3x.mixer.providers import ProviderClient
+from r3x.mixer.scoring import ModelScoringEngine
+
 
 @pytest.mark.asyncio
 async def test_provider_edge_case_invalid_key_401():
@@ -52,32 +53,36 @@ async def test_provider_edge_case_rate_limit_and_recover():
     })
 
     # First call returns 429, second call returns 200
-    with patch("httpx.AsyncClient.post", side_effect=[rate_limit_resp, success_resp]):
-        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            res = await client.chat_completion(
-                provider_name="gemini",
-                api_key="AIzaSy-test",
-                model="gemini-1.5-flash",
-                messages=[{"role": "user", "content": "test"}],
-                retries=2
-            )
-            assert res["content"] == "Hello after backoff"
-            assert mock_sleep.called
+    with (
+        patch("httpx.AsyncClient.post", side_effect=[rate_limit_resp, success_resp]),
+        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
+    ):
+        res = await client.chat_completion(
+            provider_name="gemini",
+            api_key="AIzaSy-test",
+            model="gemini-1.5-flash",
+            messages=[{"role": "user", "content": "test"}],
+            retries=2
+        )
+        assert res["content"] == "Hello after backoff"
+        assert mock_sleep.called
 
 @pytest.mark.asyncio
 async def test_provider_edge_case_malformed_json():
     client = ProviderClient(timeout=2.0)
     bad_json_resp = httpx.Response(200, text="<HTML>502 Bad Gateway</HTML>")
 
-    with patch("httpx.AsyncClient.post", return_value=bad_json_resp):
-        with pytest.raises(ProviderError):
-            await client.chat_completion(
-                provider_name="openrouter",
-                api_key="sk-or-test",
-                model="anthropic/claude-3.5-sonnet",
-                messages=[{"role": "user", "content": "test"}],
-                retries=1
-            )
+    with (
+        patch("httpx.AsyncClient.post", return_value=bad_json_resp),
+        pytest.raises(ProviderError),
+    ):
+        await client.chat_completion(
+            provider_name="openrouter",
+            api_key="sk-or-test",
+            model="anthropic/claude-3.5-sonnet",
+            messages=[{"role": "user", "content": "test"}],
+            retries=1
+        )
 
 def test_budget_guard_enforcement():
     bg = BudgetGuard(max_cost_limit_usd=1.0)

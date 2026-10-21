@@ -1,10 +1,14 @@
-import pytest
 import os
+import uuid
 from pathlib import Path
-from tests.mock_target_server import MockTargetServer
-from r3x.memory.db import db
+
+import pytest
+
 from r3x.agents.hermes_master import hermes_master
+from r3x.memory.db import db
 from r3x.reports.generator import report_generator
+from tests.mock_target_server import MockTargetServer
+
 
 @pytest.fixture(scope="module")
 def mock_server():
@@ -15,13 +19,15 @@ def mock_server():
 
 def test_full_end_to_end_assessment_pipeline(mock_server):
     target_url = "http://127.0.0.1:8999"
-    project_name = "e2e-audit-project"
+    run_id = uuid.uuid4().hex[:8]
+    project_id = f"proj-e2e-{run_id}"
+    project_name = f"e2e-audit-{run_id}"
 
     # 1. Project & Scope Setup
-    proj = db.create_project("proj-e2e-1", project_name, "End to End Pipeline Verification")
-    db.add_target("target-e2e-1", proj["id"], target_url, "127.0.0.1", port=8999)
+    proj = db.create_project(project_id, project_name, "End to End Pipeline Verification")
+    db.add_target(f"target-e2e-{run_id}", proj["id"], target_url, "127.0.0.1", port=8999)
     db.set_scope(
-        scope_id="scope-e2e-1",
+        scope_id=f"scope-e2e-{run_id}",
         project_id=proj["id"],
         domain="127.0.0.1",
         allowed=["127.0.0.1"],

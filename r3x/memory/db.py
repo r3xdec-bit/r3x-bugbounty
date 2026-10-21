@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS findings (
     status TEXT NOT NULL,
     confidence_score REAL,
     technical_explanation TEXT,
+    impact TEXT,
     remediation TEXT,
     evidence_hash TEXT,
     created_at TEXT NOT NULL,
@@ -128,6 +129,10 @@ class Database:
     def _init_db(self) -> None:
         with self._get_connection() as conn:
             conn.executescript(SCHEMA)
+            try:
+                conn.execute("ALTER TABLE findings ADD COLUMN impact TEXT")
+            except sqlite3.OperationalError:
+                pass  # Already exists
 
     # ------------------ Projects ------------------
     def create_project(self, project_id: str, name: str, description: str = "") -> dict[str, Any]:
@@ -225,13 +230,14 @@ class Database:
         with self._get_connection() as conn:
             conn.execute(
                 """INSERT INTO findings 
-                (id, scan_id, project_id, title, severity, endpoint, cwe, cvss, status, confidence_score, technical_explanation, remediation, evidence_hash, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (id, scan_id, project_id, title, severity, endpoint, cwe, cvss, status, confidence_score, technical_explanation, impact, remediation, evidence_hash, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     finding["id"], finding["scan_id"], finding["project_id"], finding["title"],
                     finding["severity"], finding["endpoint"], finding.get("cwe"), finding.get("cvss", 0.0),
                     finding["status"], finding.get("confidence_score", 1.0),
-                    finding.get("technical_explanation", ""), finding.get("remediation", ""),
+                    finding.get("technical_explanation", ""), finding.get("impact", ""),
+                    finding.get("remediation", ""),
                     finding.get("evidence_hash", ""), created_at
                 )
             )

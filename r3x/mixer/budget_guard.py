@@ -2,14 +2,15 @@
 R3X AI Mixer Budget Guard
 Enforces spending caps to prevent runaway API costs across all providers.
 """
-from typing import Dict, Any, Optional
+from typing import Any
+
 from r3x.core.exceptions import R3XError
-from r3x.memory.db import db
 from r3x.core.logger import logger
+from r3x.memory.db import db
+
 
 class BudgetExceededError(R3XError):
     """Raised when an operation would exceed the configured spending limit."""
-    pass
 
 class BudgetGuard:
     def __init__(self, max_cost_limit_usd: float = 10.0):
@@ -21,7 +22,7 @@ class BudgetGuard:
         self.max_cost_limit_usd = max(0.0, float(limit_usd))
         logger.info(f"BudgetGuard: Maximum spending cap set to ${self.max_cost_limit_usd:.2f} USD")
 
-    def get_budget_status(self) -> Dict[str, Any]:
+    def get_budget_status(self) -> dict[str, Any]:
         """Check total current expenditure versus threshold."""
         usage = db.get_api_usage_summary()
         current_spent = usage.get("total_cost_usd", 0.0)

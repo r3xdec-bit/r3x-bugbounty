@@ -27,6 +27,9 @@ app.add_typer(mixer_app, name="mixer")
 project_app = typer.Typer(name="project", help="Manage security audit projects")
 app.add_typer(project_app, name="project")
 
+plugin_app = typer.Typer(name="plugin", help="Manage R3X modular security plugins")
+app.add_typer(plugin_app, name="plugin")
+
 console = Console()
 
 @app.callback(invoke_without_command=True)
@@ -387,18 +390,74 @@ def scan_diff(
     from r3x.reports.generator import report_generator
     report_generator.render_diff(scan1, scan2)
 
+@app.command("dashboard")
+def live_dashboard():
+    """Display real-time R3X operational telemetry & agent status."""
+    from r3x.cli.dashboard import render_dashboard
+    render_dashboard()
+
+@app.command("surface")
+def attack_surface(project: str | None = typer.Option("default", "--project", "-p", help="Project name")):
+    """Visualize target topology and findings in an Attack Surface Graph."""
+    from r3x.core.graph import surface_graph
+    surface_graph.render_terminal(project or "default")
+
+# ----------------- Plugin Commands -----------------
+@plugin_app.command("list")
+def plugin_list():
+    """List available and installed plugins."""
+    from r3x.plugins.manager import plugin_manager
+    plugin_manager.display_plugins()
+
+@plugin_app.command("install")
+def plugin_install(name: str = typer.Argument(..., help="Plugin name")):
+    """Install and verify a modular extension plugin."""
+    from r3x.plugins.manager import plugin_manager
+    plugin_manager.install_plugin(name)
+    console.print(f"[bold green]✓ Plugin '{name}' installed successfully.[/]")
+
+@plugin_app.command("enable")
+def plugin_enable(name: str = typer.Argument(..., help="Plugin name")):
+    """Enable an installed plugin."""
+    from r3x.plugins.manager import plugin_manager
+    if plugin_manager.enable_plugin(name):
+        console.print(f"[bold green]✓ Plugin '{name}' enabled.[/]")
+    else:
+        console.print(f"[bold red]Plugin '{name}' not found.[/]")
+
+@plugin_app.command("disable")
+def plugin_disable(name: str = typer.Argument(..., help="Plugin name")):
+    """Disable an installed plugin."""
+    from r3x.plugins.manager import plugin_manager
+    if plugin_manager.disable_plugin(name):
+        console.print(f"[bold yellow]✓ Plugin '{name}' disabled.[/]")
+    else:
+        console.print(f"[bold red]Plugin '{name}' not found.[/]")
+
 @app.command("report")
 def generate_report(
     html: bool = typer.Option(False, "--html", help="Generate HTML report"),
     markdown: bool = typer.Option(False, "--markdown", "--md", help="Generate Markdown report"),
     json_out: bool = typer.Option(False, "--json", help="Generate JSON report"),
     pdf: bool = typer.Option(False, "--pdf", help="Generate PDF report"),
+    bounty: str | None = typer.Option(None, "--bounty", "-b", help="Generate HackerOne submission markdown for finding ID"),
     scan: str | None = typer.Option(None, "--scan", "-s", help="Scan ID"),
     project: str | None = typer.Option(None, "--project", "-p", help="Project name or ID"),
     out: str | None = typer.Option(None, "--out", "-o", help="Output file path")
 ):
     """Export security assessment report in multiple formats."""
     from r3x.reports.generator import report_generator
+    from r3x.reports.intelligence import report_intelligence
+
+    if bounty:
+        submission = report_intelligence.export_bug_bounty_submission(bounty)
+        console.print(submission)
+        if out:
+            from pathlib import Path
+            Path(out).write_text(submission, encoding="utf-8")
+            console.print(f"[bold green]✓ Bug bounty submission exported to {out}[/]")
+        return
+
     fmt = "html" if html else ("md" if markdown else ("json" if json_out else ("pdf" if pdf else "html")))
     report_generator.create_report(project_id=project, scan_id=scan, format_type=fmt, output_path=out)
 
