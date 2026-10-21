@@ -98,6 +98,10 @@ class ProviderClient:
                     }
 
             except (httpx.TimeoutException, httpx.NetworkError) as e:
+                # If local service is not running (ConnectError), fail fast immediately
+                if isinstance(e, httpx.ConnectError) and ("localhost" in url or "127.0.0.1" in url):
+                    raise ProviderError(f"Local provider '{provider_name}' service is offline at {url}")
+
                 last_exception = e
                 wait_sec = 1.5 ** attempt
                 logger.warning(f"Network error on {provider_name}: {e}. Retrying in {wait_sec:.1f}s...")
