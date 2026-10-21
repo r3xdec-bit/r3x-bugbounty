@@ -1,0 +1,44 @@
+name: R3X-BugBounty CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y nmap
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e ".[dev]"
+
+    - name: Run Test Suite
+      run: |
+        pytest tests/ -v
+
+    - name: Verify CLI Entry Point
+      run: |
+        r3x --help
+        r3x doctor
+        r3x agents

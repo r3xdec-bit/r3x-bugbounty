@@ -1,0 +1,28 @@
+version: "1.0.0"
+network:
+  user_agent: "R3X-BugBounty-Security-Audit/1.0 (+https://github.com/r3xdec/r3x-bugbounty)"
+  timeout_seconds: 15
+  rate_limit_per_second: 5
+  max_concurrent_tasks: 4
+  verify_ssl: true
+  follow_redirects: false
+
+safety:
+  strict_scope_enforcement: true
+  allow_destructive_tests: false
+  require_confirmation_for_active: true
+  auto_redact_secrets: true
+  emergency_stop_triggered: false
+
+integrations:
+  hermes_endpoint: "http://127.0.0.1:8686"
+  hexstrike_endpoint: "http://127.0.0.1:8888"
+
+mixer:
+  default_provider: "nvidia"
+  fallback_order:
+    - "nvidia"
+    - "openrouter"
+    - "openai"
+    - "gemini"
+    - "ollama"

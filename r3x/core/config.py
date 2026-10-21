@@ -1,0 +1,70 @@
+"""
+R3X Core Configuration & Settings Management
+"""
+import os
+import json
+from pathlib import Path
+from typing import Dict, Any, Optional
+from pydantic import BaseModel, Field
+
+DEFAULT_R3X_HOME = Path.home() / ".r3x"
+
+class NetworkConfig(BaseModel):
+    user_agent: str = "R3X-BugBounty-Security-Audit/1.0 (+https://github.com/r3xdec/r3x-bugbounty)"
+    timeout_seconds: int = 15
+    rate_limit_per_second: int = 5
+    max_concurrent_tasks: int = 4
+    verify_ssl: bool = True
+    follow_redirects: bool = False  # Scope protection: don't blind redirect
+
+class SafetyConfig(BaseModel):
+    strict_scope_enforcement: bool = True
+    allow_destructive_tests: bool = False  # Strictly forbidden
+    require_confirmation_for_active: bool = True
+    auto_redact_secrets: bool = True
+    emergency_stop_triggered: bool = False
+
+class Settings(BaseModel):
+    version: str = "1.0.0"
+    base_dir: Path = DEFAULT_R3X_HOME
+    db_path: Path = DEFAULT_R3X_HOME / "r3x_memory.db"
+    keystore_path: Path = DEFAULT_R3X_HOME / "vault.enc"
+    audit_log_path: Path = DEFAULT_R3X_HOME / "audit.log"
+    reports_dir: Path = DEFAULT_R3X_HOME / "reports"
+    evidence_dir: Path = DEFAULT_R3X_HOME / "evidence"
+    
+    # Integrations default configs
+    hermes_path: Optional[str] = None
+    hermes_endpoint: str = "http://127.0.0.1:8686"
+    hexstrike_endpoint: str = "http://127.0.0.1:8888"
+    
+    network: NetworkConfig = Field(default_factory=NetworkConfig)
+    safety: SafetyConfig = Field(default_factory=SafetyConfig)
+
+    def ensure_directories(self) -> None:
+        """Create necessary directories if they don't exist."""
+        self.base_dir.mkdir(parents=True, exist_ok=True)
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
+        self.evidence_dir.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def load(cls, config_file: Optional[Path] = None) -> "Settings":
+        cfg_file = config_file or (DEFAULT_R3X_HOME / "config.json")
+        if cfg_file.exists():
+            try:
+                with open(cfg_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    return cls.model_validate(data)
+            except Exception:
+                pass
+        instance = cls()
+        instance.ensure_directories()
+        return instance
+
+    def save(self, config_file: Optional[Path] = None) -> None:
+        cfg_file = config_file or (self.base_dir / "config.json")
+        self.ensure_directories()
+        with open(cfg_file, "w", encoding="utf-8") as f:
+            f.write(self.model_dump_json(indent=2))
+
+settings = Settings.load()

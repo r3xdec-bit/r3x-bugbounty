@@ -1,0 +1,62 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+hexstrike-env/
+
+# R3X Runtime Data & Sensitive Stores (NEVER COMMIT)
+.r3x/
+*.enc
+*.db
+*.sqlite
+*.sqlite3
+*.log
+audit.log
+install.log
+vault.enc
+/reports/
+/evidence/
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,11 @@
+POST /api/v1/user/profile HTTP/1.1
+Host: demo-target.local
+User-Agent: Mozilla/5.0 (X11; Linux x86_64)
+Authorization: Bearer secret-demo-token-123456789
+Content-Type: application/json
+Origin: https://evil.com
+
+{
+  "username": "admin",
+  "email": "test@demo.local"
+}
