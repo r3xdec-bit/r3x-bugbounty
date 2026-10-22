@@ -12,8 +12,8 @@ from r3x.memory.db import db
 
 console = Console()
 
-def render_dashboard() -> None:
-    """Render the full live operational dashboard with authentic metrics."""
+def get_dashboard_renderable() -> Table:
+    """Return the renderable dashboard grid for programmatic rendering or CLI display."""
     statuses = get_live_status()
     agents = agent_registry.list_all()
     scans = db.list_scans()
@@ -41,7 +41,6 @@ def render_dashboard() -> None:
 
         if match_key:
             txt, color = statuses[match_key]
-            # Format clean badge
             badge = "ACTIVE" if "ACTIVE" in txt or "READY" in txt or "CONFIGURED" in txt else ("CONNECTED" if "CONNECTED" in txt else "OFFLINE")
             badge_color = color
             srv_table.add_row(srv, ":", f"[{badge_color}][{badge}][/] [dim]({txt})[/]")
@@ -60,7 +59,6 @@ def render_dashboard() -> None:
     metrics_table.add_row("Tokens Used", f"[bold cyan]{total_tokens:,}[/]")
     metrics_table.add_row("Verified Findings", f"[bold red]{verified_findings}[/]")
 
-    # Compose into Panel
     grid = Table.grid(expand=True, padding=(0, 2))
     grid.add_column(ratio=1)
     grid.add_column(ratio=1)
@@ -68,7 +66,11 @@ def render_dashboard() -> None:
         Panel(srv_table, title="[bold cyan]Integrations & Core Engines[/]"),
         Panel(metrics_table, title="[bold green]Live Operational Telemetry[/]")
     )
+    return grid
 
+def render_dashboard() -> None:
+    """Render the full live operational dashboard with authentic metrics."""
+    grid = get_dashboard_renderable()
     console.print("\n[bold cyan]R3X-BugBounty V2 Real-Time Dashboard[/]\n")
     console.print(grid)
     console.print()

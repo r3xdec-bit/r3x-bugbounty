@@ -259,6 +259,10 @@ class Database:
 
     def list_findings(self, project_id: str | None = None, scan_id: str | None = None) -> list[dict[str, Any]]:
         with self._get_connection() as conn:
+            if project_id:
+                proj = self.get_project(project_id)
+                if proj:
+                    project_id = proj["id"]
             query = "SELECT * FROM findings WHERE 1=1"
             params = []
             if project_id:

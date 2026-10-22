@@ -28,6 +28,50 @@ The framework emphasizes **strict scope enforcement**, **empirical evidence coll
 
 ---
 
+## 📸 Live Terminal Interface & Screenshots
+
+<details open>
+<summary><b>1. Cyber REPL Shell & Minimalist Terminal Banner</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/01_terminal_repl_banner.png" alt="R3X Terminal REPL & Status Banner" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>2. Real-Time Operational Telemetry Dashboard (<code>r3x dashboard</code>)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/02_live_dashboard.png" alt="R3X Operational Telemetry Dashboard" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>3. Live Assessment Execution Pipeline against Target (<code>cyberlymph.com</code>)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/03_scan_execution.png" alt="R3X Multi-Agent Scan Pipeline" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>4. Security Findings Register & Attack Surface Graph</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/04_findings_and_surface.png" alt="R3X Findings & Topology Tree" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>5. Bug Bounty Platform Submission Report (HackerOne / Bugcrowd Format)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/05_bounty_report.png" alt="R3X Bug Bounty Report Export" width="850"/>
+</p>
+</details>
+
+---
+
 ## 💻 System Requirements & Supported Platforms
 
 | Component | Minimum Requirement | Notes |

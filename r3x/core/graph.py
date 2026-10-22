@@ -64,30 +64,22 @@ class AttackSurfaceGraph:
 
         return self.graph
 
-    def render_terminal(self, project_id_or_name: str = "default") -> None:
-        """Renders the attack surface graph as a structured hierarchical Rich terminal tree."""
+    def get_tree(self, project_id_or_name: str = "default") -> Tree:
+        """Build and return the hierarchical Rich Tree representation of the attack surface graph."""
         g = self.build_from_project(project_id_or_name)
         proj = db.get_project(project_id_or_name) or {"name": project_id_or_name}
 
-        if len(g.nodes) <= 1:
-            console.print("[yellow]Attack surface graph is empty. Run a scan to discover assets.[/]")
-            return
-
         root_tree = Tree(f"[bold cyan]🌐 Attack Surface Graph: {proj['name']}[/]")
-
-        # Find host nodes
         host_nodes = [n for n, d in g.nodes(data=True) if d.get("type") == "HOST"]
         for h in host_nodes:
             h_data = g.nodes[h]
             h_branch = root_tree.add(f"[bold white]🖥 Host:[/] [cyan]{h_data['label']}[/]")
 
-            # Find connected endpoints
             endpoints = [v for u, v, d in g.out_edges(h, data=True) if d.get("relation") == "EXPOSES"]
             for ep in endpoints:
                 ep_data = g.nodes[ep]
                 ep_branch = h_branch.add(f"[bold green]🔗 Endpoint:[/] [dim]{ep_data['label']}[/]")
 
-                # Find vulnerabilities on this endpoint
                 vulnerabilities = [v for u, v, d in g.out_edges(ep, data=True) if d.get("relation") == "HAS_VULNERABILITY"]
                 for v in vulnerabilities:
                     v_data = g.nodes[v]
@@ -97,7 +89,16 @@ class AttackSurfaceGraph:
                         f"[{sev_color}]⚡ [{sev}][/] {v_data['label']} "
                         f"[dim](CVSS: {v_data.get('cvss')}) - {v_data.get('status')}[/]"
                     )
+        return root_tree
 
+    def render_terminal(self, project_id_or_name: str = "default") -> None:
+        """Renders the attack surface graph as a structured hierarchical Rich terminal tree."""
+        g = self.build_from_project(project_id_or_name)
+        if len(g.nodes) <= 1:
+            console.print("[yellow]Attack surface graph is empty. Run a scan to discover assets.[/]")
+            return
+
+        root_tree = self.get_tree(project_id_or_name)
         console.print(Panel(root_tree, title="[bold cyan]R3X Neural Topology & Vulnerability Graph[/]"))
         console.print(f"[dim]Total Nodes: {len(g.nodes)} | Total Edges: {len(g.edges)}[/]\n")
 

@@ -28,6 +28,50 @@
 
 ---
 
+## 📸 لقطات شاشة حية من واجهة النظام وعمليات الفحص
+
+<details open>
+<summary><b>1. الواجهة التفاعلية Cyber REPL وشعار النظام المدمج</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/01_terminal_repl_banner.png" alt="R3X Terminal REPL & Status Banner" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>2. لوحة المتابعة والعمليات الحية (<code>r3x dashboard</code>)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/02_live_dashboard.png" alt="R3X Operational Telemetry Dashboard" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>3. تشغيل الفحص الأمني الميداني على الهدف (<code>cyberlymph.com</code>)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/03_scan_execution.png" alt="R3X Multi-Agent Scan Pipeline" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>4. سجل الثغرات المكتشفة ومخطط سطح الهجوم (Topology Tree)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/04_findings_and_surface.png" alt="R3X Findings & Topology Tree" width="850"/>
+</p>
+</details>
+
+<details open>
+<summary><b>5. تقرير الثغرات الجاهز لمنصات مكافآت الثغرات (HackerOne / Bugcrowd)</b></summary>
+<br>
+<p align="center">
+  <img src="assets/screenshots/05_bounty_report.png" alt="R3X Bug Bounty Report Export" width="850"/>
+</p>
+</details>
+
+---
+
 ## 💻 متطلبات النظام والتوزيعات المدعومة
 
 | المكون | الحد الأدنى | ملاحظات تقنية |
