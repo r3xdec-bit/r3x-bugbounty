@@ -2,17 +2,16 @@
 
 <img src="assets/hero_banner.png" alt="R3X-BugBounty — Autonomous AI Security Framework" width="800"/>
 
-# R3X-BugBounty — Autonomous AI Security Framework [v2.0.0]
-### Multi-Agent Autonomous Security Auditing & Bug Bounty Assessment Platform
+# R3X-BugBounty — Multi-Agent AI Security Auditing Framework
+### Modular, Terminal-Native Web Application Security Assessment & Bug Bounty Platform
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Release-v2.0.0--Evolution-green.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Security](https://img.shields.io/badge/Security-Bandit%20Passing-brightgreen.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
-[![Multi-Agent](https://img.shields.io/badge/Agents-12%20Autonomous%20%2B%20Debate-purple.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
-[![Evidence-First](https://img.shields.io/badge/Evidence-SHA--256%20Verified-cyan.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
+[![CI Pipeline](https://github.com/r3xdec-bit/r3x-bugbounty/actions/workflows/ci.yml/badge.svg)](https://github.com/r3xdec-bit/r3x-bugbounty/actions/workflows/ci.yml)
+[![Code Style](https://img.shields.io/badge/Code%20Style-Ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Security Audit](https://img.shields.io/badge/Security-Bandit%20Passing-brightgreen.svg)](https://github.com/PyCQA/bandit)
 
-[English](README.md) • [العربية](github/README_AR.md) • [Architecture](github/ARCHITECTURE.md) • [Installation](github/INSTALLATION.md) • [Changelog](github/CHANGELOG.md)
+[English](README.md) • [العربية](github/README_AR.md) • [Architecture](github/ARCHITECTURE.md) • [Installation Guide](github/INSTALLATION.md) • [Changelog](github/CHANGELOG.md)
 
 </div>
 
@@ -20,53 +19,95 @@
 
 ## 🎯 Overview
 
-**R3X-BugBounty** is an open-source, terminal-native cybersecurity assessment framework driven by 12 autonomous AI agents and cognitive correlation engines. Built strictly for authorized security assessments, penetration testing, and Bug Bounty research, R3X coordinates standard security tools, enforces domain boundary containment via the **Scope Guardian**, conducts **3-Agent Adversarial Debates** to eradicate false positives, and builds real-time attack surface topology graphs.
+**R3X-BugBounty** is an open-source, terminal-based security auditing framework designed for security researchers, penetration testers, and Bug Bounty hunters. It coordinates established open-source security tools and specialized autonomous AI agents to conduct structured, authorized web application assessments.
+
+The framework emphasizes **strict scope enforcement**, **empirical evidence collection**, **user consent before downloading any external tool**, and **reproducible reporting** formatted directly for platforms such as HackerOne, Bugcrowd, and Intigriti.
+
+> [!IMPORTANT]
+> **Strictly for Authorized Testing**: R3X is an auditing and assessment tool, not an exploitation framework. It contains zero weaponized exploit payloads, brute-force engines, or denial-of-service capabilities. Assessments must only be performed on systems you own or have explicit written permission to test.
 
 ---
 
-## ⚡ Key Highlights (v2.0.0 Evolution)
+## 💻 System Requirements & Supported Platforms
 
-- **Interactive Cyber REPL & Live Dashboard**: Terminal shell with tab auto-completion, live diagnostic matrix (`r3x dashboard`), and authentic service telemetry.
-- **Dynamic Tool Manager (Consent-First)**: Automatically checks PATH for security tools (Nmap, Nuclei, WhatWeb, Katana, etc.), isolates binaries into `~/.local/bin`, and downloads external assets **only after explicit operator consent**.
-- **Authenticated Differential Access Control Scanner**: Audits API endpoints across unauthenticated, low-privilege, and high-privilege sessions to surface Broken Object-Level Authorization (BOLA/IDOR) and Broken Function-Level Authorization (BFLA).
-- **R3X Neural Brain**: Central cognitive correlation engine that automatically chains isolated findings into high-impact multi-stage attack scenarios.
-- **Multi-Agent Adversarial Debate Engine**: 3-Agent dialectic court (Prosecutor vs. Defender adjudicated by Chief Judge) evaluating empirical evidence traces.
-- **Intelligent Attack Surface Graph**: NetworkX-powered target topology with interactive hierarchical terminal trees (`r3x surface`).
-- **AI Mixer V2**: Multi-key, multi-provider model routing with **Budget Guard** (strict financial caps) and **Model Scoring Engine** (dynamic latency, cost, and task affinity optimization).
-- **Multi-Channel Webhook Notifications**: Real-time triage dispatchers for Slack, Discord, and Telegram with automated zero-leakage token and credential redaction.
-- **Universal Linux & WSL Compatibility**: Out-of-the-box support for Kali Linux, Arch Linux, Debian, Ubuntu, Fedora/RHEL (`dnf`), openSUSE (`zypper`), and WSL 1 & 2.
-- **Self-Healing Automation Framework**: Safe failure diagnostics (rate-limits, timeouts, missing tools) with automated exponential backoff and typed retry.
-- **Smart Scan Optimizer**: Pre-flight target analysis dynamically omitting redundant probes.
-- **AI Evidence Validator**: Cryptographic SHA-256 verification and zero-leakage secret redaction audit.
-- **Plugin Marketplace & Extension Framework**: Sandboxed tool extensions (`r3x plugin list`, `install`, `enable`, `disable`) with strict privilege containment.
-- **Bug Bounty Intelligence Reporter**: One-click platform-ready Markdown submissions for HackerOne, Bugcrowd, and Intigriti (`r3x report --bounty`).
-- **Hermes Master & HexStrike AI MCP v6.0**: Decoupled integration with NousResearch/hermes-agent and standard MCP tool discovery.
+| Component | Minimum Requirement | Notes |
+|---|---|---|
+| **Operating System** | Linux / WSL | Kali Linux, Arch Linux, Ubuntu (20.04+), Debian (11+), Fedora (38+), openSUSE, WSL 1 & 2 |
+| **Python** | 3.11 or 3.12 | Tested on Python 3.11, 3.12, and 3.14 |
+| **Privileges** | Standard User | Runs in user-space (`~/.local/bin` and isolated virtualenv). Does **not** require root/sudo for daily operation |
+| **Storage & RAM** | 512 MB RAM / 250 MB Disk | Lightweight asynchronous core designed for resource-constrained laptops and VPS |
+
+---
+
+## 🛠️ Security Tool Integrations & Consent Policy
+
+R3X leverages industry-standard security utilities. **Missing tools are never downloaded silently.** R3X checks your local `$PATH` first; if a tool is absent, it asks for your explicit interactive confirmation (`y/N`), displays the download URL, verifies the package, and places the binary cleanly into `~/.local/bin` or the project `bin/` directory.
+
+| Tool | Purpose | Source / Provider | Note on Scope |
+|---|---|---|---|
+| **Nmap** | Port scanning & service version discovery | System package manager (`apt`, `pacman`, `dnf`) | Standard TCP discovery |
+| **WhatWeb** | Web technology & CMS identification | Official GitHub release | Passive web header analysis |
+| **Nuclei** | Template-based vulnerability auditing | ProjectDiscovery | Verified vulnerability patterns |
+| **httpx (Binary)** | Web server probe & status code inspection | ProjectDiscovery | *Distinct from the Python `httpx` HTTP library* |
+| **Subfinder** | Passive subdomain enumeration | ProjectDiscovery | Passive sources only (DNS-safe) |
+| **Katana** | Web crawling & endpoint mapping | ProjectDiscovery | Follows in-scope links only |
+| **Amass** | External asset mapping & DNS analysis | OWASP | Passive and active mapping |
+| **SSLyze** | TLS/SSL cipher suites & cert audit | PyPI / Binary | Cryptographic configuration check |
+| **dnsx** | Multi-purpose DNS resolver & query tool | ProjectDiscovery | Fast DNS validation |
 
 ---
 
 ## 🤖 The 12 Autonomous Agents
 
-| # | Agent Name | Core Responsibility |
+Each assessment phase is coordinated by dedicated Python agents with strictly partitioned roles:
+
+```mermaid
+flowchart TD
+    Target["Target URL / Scope Definition"] --> SG["ScopeGuardianAgent (Allowlist & Exclusion Filter)"]
+    SG --> Recon["ReconAgent (DNS, Subdomains, Tech Fingerprinting)"]
+    Recon --> Web["WebSecurityAgent (Headers, CORS, Cookies, TLS)"]
+    Recon --> API["APISecurityAgent (OpenAPI/Swagger Schemas)"]
+    Recon --> JS["JSAnalysisAgent (Client-side Endpoints & Route Discovery)"]
+    Web & API & JS --> Auth["AuthDifferentialAgent (BOLA / IDOR / BFLA Disparities)"]
+    Web & API & JS --> CVE["CVEIntelligenceAgent (Version Disclosures & Vulnerability Correlation)"]
+    Auth & CVE --> Brain["Vulnerability Chaining Engine (Attack Path Synthesis)"]
+    Brain --> FP["Consensus Cross-Verification (Multi-Perspective LLM Review)"]
+    FP --> EC["EvidenceCollectorAgent (SHA-256 Hashing, Secret Redaction, Webhooks)"]
+    EC --> Rep["ReportGeneratorAgent (HackerOne, Bugcrowd, HTML, JSON)"]
+```
+
+| # | Agent Name | Technical Responsibility |
 |---|---|---|
-| 1 | **HermesMasterOrchestrator** | Master task delegation, adaptive plan synthesis, and context preservation |
-| 2 | **ScopeGuardianAgent** | Enforces domain allowlists, exclusions, redirect protection, and emergency stop |
-| 3 | **ReconAgent** | Executes passive DNS intelligence, subdomain discovery, and tech fingerprinting |
-| 4 | **WebSecurityAgent** | Audits HTTP security headers, CORS policies, Cookie flags, and TLS parameters |
-| 5 | **APISecurityAgent** | Discovers and audits REST & GraphQL schemas (OpenAPI/Swagger) |
-| 6 | **JSAnalysisAgent** | Statically analyzes client-side JavaScript for routes, endpoints, and leaked tokens |
-| 7 | **AuthDifferentialAgent** | Differential role-based authorization auditor detecting BOLA/IDOR and BFLA disparities |
-| 8 | **CVEIntelligenceAgent** | Correlates component version disclosures with known vulnerability trends |
-| 9 | **FalsePositiveVerificationAgent** | Coordinates 3-Agent adversarial debates to eliminate false positives |
-| 10 | **EvidenceCollectorAgent** | Sanitizes HTTP traces, computes SHA-256 hashes, dispatches webhooks, and persists memory |
-| 11 | **AIMixerAgent** | Manages LLM router quotas, dynamic scoring, financial budget guard, and backoff |
-| 12 | **ReportGeneratorAgent** | Compiles verified findings into executive HTML, PDF, and platform-ready bounty submissions |
+| 1 | **HermesMasterOrchestrator** | Task delegation, assessment step scheduling, and historical context management |
+| 2 | **ScopeGuardianAgent** | Verifies domain allowlists, enforces URL exclusions, and blocks out-of-scope redirects |
+| 3 | **ReconAgent** | Coordinates passive DNS queries, subdomain enumeration, and tech stack fingerprinting |
+| 4 | **WebSecurityAgent** | Audits HTTP security headers (HSTS, CSP), CORS configurations, Cookie attributes, and TLS parameters |
+| 5 | **APISecurityAgent** | Identifies REST and GraphQL endpoints, parses exposed OpenAPI/Swagger schemas, and tests schema compliance |
+| 6 | **JSAnalysisAgent** | Statically analyzes client-side JavaScript bundles to extract hidden API paths and disclosed endpoints |
+| 7 | **AuthDifferentialAgent** | Differential authorization auditor: compares response codes and payloads across anonymous, low-privilege, and high-privilege roles to identify BOLA/IDOR and BFLA disparities |
+| 8 | **CVEIntelligenceAgent** | Correlates discovered software versions with public vulnerability feeds and advisory records |
+| 9 | **FalsePositiveVerificationAgent** | Submits proposed findings to a multi-perspective consensus prompt (evaluating reproducibility and evidence strength) to filter out scanner false positives |
+| 10 | **EvidenceCollectorAgent** | Redacts sensitive credentials (tokens, passwords), computes cryptographic SHA-256 evidence hashes, dispatches webhook alerts, and commits findings to SQLite |
+| 11 | **AIMixerAgent** | Handles multi-key rotation, manages financial budget limits (`BudgetGuard`), and selects models based on task latency and cost |
+| 12 | **ReportGeneratorAgent** | Compiles verified findings into executive HTML, PDF, JSON, and platform-compliant Markdown for HackerOne, Bugcrowd, and Intigriti |
+
+---
+
+## 🔑 AI Integrations & Local Key Management
+
+R3X can operate with cloud AI providers or entirely offline using local models:
+
+- **Supported Providers**: NVIDIA NIM, OpenRouter, OpenAI, Google Gemini, and local **Ollama** (offline/air-gapped).
+- **Local Fernet Vault**: API keys are encrypted at rest using machine-derived Fernet symmetric encryption stored in `~/.r3x/vault.enc`. Keys are never sent to external servers other than the configured provider endpoint.
+- **Budget Guard**: Set a hard financial limit on LLM usage (e.g. `$5.00`). If consumption reaches the threshold, further LLM calls are blocked immediately to prevent unexpected costs.
+- **Dynamic Task Routing**: Automatically routes fast reconnaissance tasks to lightweight models and deep reporting/chaining to reasoning models.
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Automated Installation
-Run the interactive installer supporting **Kali Linux**, **Arch Linux**, **Ubuntu**, **Debian**, **Fedora/RHEL**, **openSUSE**, and **WSL**:
+Run the interactive installer supporting Kali, Arch, Debian, Ubuntu, Fedora, openSUSE, and WSL:
 
 ```bash
 git clone https://github.com/r3xdec-bit/r3x-bugbounty.git
@@ -75,7 +116,9 @@ chmod +x install.sh
 ./install.sh
 ```
 
-### 2. Launch the Interactive Shell
+The installer verifies your distribution, checks installed tools, prompts before installing anything missing, creates an isolated Python virtual environment (`.venv`), and verifies binary execution paths.
+
+### 2. Launch the Interactive Cyber REPL
 ```bash
 source .venv/bin/activate
 r3x
@@ -83,62 +126,105 @@ r3x
 
 ---
 
-## 🛠️ Essential Commands
+## 🛠️ Typical Assessment Workflow
 
+### Step 1: Initialize Project & Define Scope
 ```bash
-# Real-Time Operational Telemetry & Diagnostics
-r3x dashboard
-r3x doctor
+# Create an isolated assessment workspace
+r3x project new client-audit --description "Authorized external web audit"
 
-# Project & Target Setup
-r3x project new my-target
-r3x target add https://target.example.com --project my-target
-r3x scope import scope.json --project my-target
+# Add target base URL
+r3x target add https://target.example.com --project client-audit
 
-# Multi-Provider AI Mixer Management & Budget Guard
+# Import scope rules (allowlist domains and excluded paths like logout or oauth)
+r3x scope import scope.json --project client-audit
+```
+
+### Step 2: Configure AI Providers & Budget
+```bash
+# Add API key (saved encrypted in local vault)
 r3x mixer add nvidia
 r3x mixer add openrouter
-r3x mixer add ollama
-r3x mixer list
+
+# Review active keys, quotas, and providers
 r3x mixer status
+```
 
-# Security Assessments
-r3x scan --quick --project my-target
-r3x scan --full --project my-target
-r3x scan --api --project my-target
+### Step 3: Run the Assessment
+```bash
+# Quick passive reconnaissance & header audit
+r3x scan --quick --project client-audit
 
-# Attack Surface Topology Graph
-r3x surface --project my-target
+# Comprehensive scan (Recon + Web + API + JS + Differential Auth + CVE)
+r3x scan --full --project client-audit
 
-# Plugin Marketplace
-r3x plugin list
-r3x plugin enable waf_fingerprint
+# Check operational dashboard
+r3x dashboard
+```
 
-# Findings, Evidence & History
-r3x findings --project my-target
+### Step 4: Review Findings & Attack Surface Topology
+```bash
+# View confirmed findings with severity ratings
+r3x findings --project client-audit
+
+# Inspect cryptographically hashed evidence artifacts
 r3x evidence
-r3x history
-r3x resume
 
-# Platform-Ready Bug Bounty Submissions & Reports
-r3x report --bounty --project my-target
-r3x report --html --project my-target
-r3x report --md --project my-target
-r3x report --json --project my-target
+# Visualize the discovered target topology tree
+r3x surface --project client-audit
+```
+
+### Step 5: Export Platform-Ready Reports
+```bash
+# Generate submissions ready for HackerOne / Bugcrowd / Intigriti
+r3x report --bounty --project client-audit
+
+# Generate executive HTML or structured JSON reports
+r3x report --html --project client-audit
+r3x report --json --project client-audit
 ```
 
 ---
 
-## 🔒 Security & Scope Guardian Rules
+## 🔔 Webhook Notifications
 
-R3X enforces defensive rules of engagement:
-1. **Zero Destructive Testing**: Brute-force attacks, sensitive database extraction, and weaponized exploit payloads are strictly prohibited.
-2. **Strict Domain Allowlist**: All scanner probes verify targets against the allowlist before transmitting packets.
-3. **Prompt Injection Defense**: Target HTTP responses and headers are sanitized and encapsulated in XML tags prior to LLM reasoning.
-4. **Emergency Stop**: Run `r3x` and trigger immediate halt at any point during active operations.
+Configure real-time alerts for identified findings directly to your triage channel:
+- **Slack**: Formatted blocks with severity color coding.
+- **Discord**: Embedded cards with CVSS ratings and affected endpoints.
+- **Telegram**: Structured markdown notifications.
+
+*All webhook dispatches pass through the automated secrets sanitizer, redacting Authorization Bearer tokens, private keys, and passwords before transmission.*
 
 ---
 
-## 📄 License
+## 🛡️ Defensive Boundaries & Guardrails
+
+1. **Strict Domain Containment**: Out-of-scope HTTP requests are blocked before socket creation by the `ScopeGuardian`.
+2. **Emergency Pause & Resume**: Any scan can be paused immediately (`Ctrl+C` or `r3x pause`), persisting current state in SQLite for later resumption with `r3x resume`.
+3. **No Exploits**: Findings document vulnerabilities and provide reproduction requests without weaponized exploit payloads.
+4. **Prompt Injection Defense**: Target responses are treated as untrusted data, sanitized, and wrapped in delimited XML blocks before LLM processing.
+
+---
+
+## 🧪 Testing & Verification
+
+The framework includes a comprehensive test suite covering CLI commands, AI edge cases, provider timeouts, rate-limit backoff, and scanner functionality:
+
+```bash
+# Run the complete test suite (41 unit & integration tests)
+pytest -v
+
+# Run static security audit
+bandit -r r3x/
+
+# Run code style and lint check
+ruff check r3x/ tests/
+```
+
+---
+
+## 📄 License & Attribution
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for details.
+
+Developed for the cybersecurity community, penetration testers, and ethical Bug Bounty researchers.
