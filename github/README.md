@@ -1,13 +1,6 @@
 <div align="center">
 
-```
- ██████╗ ██████╗ ██╗  ██╗██████╗ ███████╗ ██████╗
- ██╔══██╗╚════██╗╚██╗██╔╝██╔══██╗██╔════╝██╔════╝
- ██████╔╝ █████╔╝ ╚███╔╝ ██║  ██║█████╗  ██║     
- ██╔══██╗ ╚═══██╗ ██╔██╗ ██║  ██║██╔══╝  ██║     
- ██║  ██║██████╔╝██╔╝ ██╗██████╔╝███████╗╚██████╗
- ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝
-```
+<img src="assets/hero_banner.png" alt="R3X-BugBounty — Autonomous AI Security Framework" width="800"/>
 
 # R3X-BugBounty — Autonomous AI Security Framework [v2.0.0]
 ### Multi-Agent Autonomous Security Auditing & Bug Bounty Assessment Platform

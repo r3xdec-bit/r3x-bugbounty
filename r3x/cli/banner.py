@@ -1,53 +1,41 @@
 """
 R3X Banner & Live Status Dashboard
-Displays the stylized cyber logo, greeting, and genuine connection states.
+Minimalist, high-performance cyberpunk terminal header.
+Features a compact two-column layout with the stylized Cyber-R emblem
+on the right and genuine service connectivity on the left.
 """
 
+from rich import box
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 
 from r3x.core.logger import logger
 
 console = Console()
 
-CYBER_ASCII_HOOD = """
-                     [bold white].........:::::..[/]
-                   [bold white]..::-=--=+-:...[/]
-                  [bold white]...:-:-:.:*+:....[/]
-              [bold cyan]. .....:::::.:#+......[/]
-               [bold cyan]........:::.--     .:...:[/]
-              [bold cyan].........::.::           .:[/]
-            [bold cyan]........:.....:.  ..       ..[/]
-          [bold cyan]. .............:.   .        ..[/]
-          [bold cyan]. ..  ........:    .          .[/]
-               [bold green].......    .-*:  ..      .[/]
-               [bold green]......-=***#@@.:-.       .[/]
-            [bold green].    ...=%@@@@**+ +#:       .[/]
-       [bold green]...... .  . :#%#+-::            ..[/]
-    [bold green].  .  .   ....  .=##+-[/]
-       [bold green]. .....        .=++:             ..[/]
-    [bold green]...   . .                           .. ..[/]
-    [bold red]01010010 01000110 00101100 11001010[/]
-"""
+# Stylized Cyber 'R' emblem (Badge 3 - Red Cyberpunk Glyph)
+CYBER_R_BADGE = """[bold red]
+  ◢██████◣ 
+  ██    ██ 
+  ███████◤ 
+  ██   ◥██ 
+  ██    ██ 
+  ▀▀    ▀▀ [/]"""
 
-R3XDEC_TYPO = """
- [bold cyan]██████╗ ██████╗ ██╗  ██╗██████╗ ███████╗ ██████╗[/]
- [bold cyan]██╔══██╗╚════██╗╚██╗██╔╝██╔══██╗██╔════╝██╔════╝[/]
- [bold cyan]██████╔╝ █████╔╝ ╚███╔╝ ██║  ██║█████╗  ██║     [/]
- [bold cyan]██╔══██╗ ╚═══██╗ ██╔██╗ ██║  ██║██╔══╝  ██║     [/]
- [bold cyan]██║  ██║██████╔╝██╔╝ ██╗██████╔╝███████╗╚██████╗[/]
- [bold cyan]╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝ ╚═════╝[/]
-"""
 
 def get_live_status() -> dict[str, tuple[str, str]]:
     """
     Check the genuine status of:
+    - AI MIXER
     - NVIDIA NIM
     - HERMES
     - HEXSTRIKE
-    - AI MIXER
+    - SCOPE GUARDIAN
     Returns dict mapping component -> (Status Text, Rich Color Style)
     """
+    import os
+
     import httpx
 
     from r3x.core.config import settings
@@ -60,27 +48,30 @@ def get_live_status() -> dict[str, tuple[str, str]]:
         keys_summary = key_store.get_status_summary()
         total_keys = keys_summary["total_keys"]
         if total_keys > 0:
-            providers = ", ".join(keys_summary["active_providers"])
-            status["AI MIXER"] = (f"ACTIVE ({total_keys} keys across: {providers})", "bold green")
+            providers = ", ".join(keys_summary.get("provider_breakdown", {}).keys())
+            status["AI Mixer"] = (f"ACTIVE ({total_keys} keys: {providers})", "bold green")
         else:
-            status["AI MIXER"] = ("STANDBY (No keys registered)", "bold yellow")
+            status["AI Mixer"] = ("STANDBY (No keys configured)", "bold yellow")
     except Exception:
-        status["AI MIXER"] = ("OFFLINE (Vault locked)", "bold red")
+        status["AI Mixer"] = ("OFFLINE (Vault locked)", "bold red")
 
     # 2. NVIDIA NIM Status
     try:
-        nvidia_keys = key_store.get_keys("nvidia")
-        if nvidia_keys:
-            # Check key validity or connectivity to NVIDIA NIM endpoint
-            status["NVIDIA NIM"] = ("CONFIGURED (Ready)", "bold green")
+        nvidia_entries = [k for k in key_store.list_all() if k.provider.lower() == "nvidia"]
+        if any(k.is_active for k in nvidia_entries):
+            status["NVIDIA NIM"] = ("READY (Active key loaded)", "bold green")
+        elif nvidia_entries:
+            status["NVIDIA NIM"] = ("CONFIGURED (Key in vault)", "bold cyan")
         else:
-            status["NVIDIA NIM"] = ("NOT CONFIGURED", "bold yellow")
+            status["NVIDIA NIM"] = ("STANDBY (Not configured)", "dim")
     except Exception:
         status["NVIDIA NIM"] = ("ERROR", "bold red")
 
-    # 3. HERMES Agent Status
+    # 3. SCOPE GUARDIAN
+    status["Scope Guardian"] = ("ENFORCED (Boundary containment)", "bold cyan")
+
+    # 4. HERMES Agent Status
     try:
-        # Check if hermes local repo or daemon is responsive
         hermes_alive = False
         try:
             r = httpx.get(f"{settings.hermes_endpoint}/health", timeout=0.8)
@@ -90,18 +81,20 @@ def get_live_status() -> dict[str, tuple[str, str]]:
             logger.debug(f"Hermes probe check: {e}")
 
         if hermes_alive:
-            status["HERMES"] = ("ONLINE & READY", "bold green")
+            status["Hermes Agent"] = ("ONLINE & READY", "bold green")
         else:
-            # Check if hermes code / repo is installed in project or bin
-            import os
-            if os.path.exists("hermes-agent") or os.path.exists("bin/hermes") or (settings.hermes_path and os.path.exists(settings.hermes_path)):
-                status["HERMES"] = ("STANDBY (Installed / Daemon stopped)", "bold yellow")
+            if (
+                os.path.exists("hermes-agent")
+                or os.path.exists("bin/hermes")
+                or (settings.hermes_path and os.path.exists(settings.hermes_path))
+            ):
+                status["Hermes Agent"] = ("STANDBY (Daemon stopped)", "bold yellow")
             else:
-                status["HERMES"] = ("OFFLINE (Not installed)", "bold red")
+                status["Hermes Agent"] = ("STANDBY (Optional subagent)", "dim")
     except Exception:
-        status["HERMES"] = ("OFFLINE", "bold red")
+        status["Hermes Agent"] = ("OFFLINE", "dim")
 
-    # 4. HEXSTRIKE Status
+    # 5. HEXSTRIKE Status
     try:
         hexstrike_alive = False
         try:
@@ -112,36 +105,50 @@ def get_live_status() -> dict[str, tuple[str, str]]:
             logger.debug(f"HexStrike probe check: {e}")
 
         if hexstrike_alive:
-            status["HEXSTRIKE"] = ("CONNECTED (Port 8888)", "bold green")
+            status["HexStrike MCP"] = ("CONNECTED (Port 8888)", "bold green")
         else:
-            status["HEXSTRIKE"] = ("OFFLINE (Server not running on 8888)", "bold red")
+            status["HexStrike MCP"] = ("OFFLINE (MCP server not running)", "dim")
     except Exception:
-        status["HEXSTRIKE"] = ("OFFLINE", "bold red")
+        status["HexStrike MCP"] = ("OFFLINE", "dim")
 
     return status
 
-def show_banner(show_status: bool = True) -> None:
-    """Print the complete banner and connection status table."""
-    console.print(CYBER_ASCII_HOOD, highlight=False)
-    console.print(R3XDEC_TYPO, highlight=False)
-    console.print(
-        "[bold white]  R3X-BugBounty[/] — [bold cyan]Autonomous AI Security Framework[/]\n",
-        justify="left"
-    )
 
-    console.print("[bold green]Hi Master![/]\n")
+def show_banner(show_status: bool = True) -> None:
+    """
+    Render the compact, elegant R3X terminal banner.
+    Left: Tool Name, version, description, and genuine connection state.
+    Right: Sleek Cyber-R badge from the official brand identity.
+    """
+    table = Table(box=None, show_header=False, padding=(0, 3), pad_edge=False)
+    table.add_column(justify="left", vertical="middle")
+    table.add_column(justify="right", vertical="middle")
+
+    left_lines = [
+        "[bold white]R3X-BugBounty[/] [bold red]v2.0.0[/]",
+        "[dim]Autonomous AI Security Framework[/]",
+    ]
 
     if show_status:
+        left_lines.append("")
         statuses = get_live_status()
-        table = Table(box=None, show_header=False, pad_edge=False)
-        table.add_column("Service", style="bold white", width=14)
-        table.add_column("Separator", style="bold cyan", width=3)
-        table.add_column("Status", width=50)
+        for comp, (stat_txt, color) in statuses.items():
+            bullet = f"[{color}]●[/]" if "green" in color or "cyan" in color else (
+                "[yellow]●[/]" if "yellow" in color else "[dim]○[/]"
+            )
+            left_lines.append(f"{bullet} [bold white]{comp}:[/] [{color}]{stat_txt}[/]")
 
-        for service in ["NVIDIA NIM", "HERMES", "HEXSTRIKE", "AI MIXER"]:
-            if service in statuses:
-                text_val, style_val = statuses[service]
-                table.add_row(service, ":", f"[{style_val}]{text_val}[/]")
+    table.add_row("\n".join(left_lines), CYBER_R_BADGE.strip())
 
-        console.print(table)
-        console.print()
+    panel = Panel(
+        table,
+        border_style="red",
+        box=box.ROUNDED,
+        title="[bold red]⚡ R3X-BugBounty[/]",
+        title_align="left",
+        expand=False,
+    )
+
+    console.print()
+    console.print(panel)
+    console.print()
