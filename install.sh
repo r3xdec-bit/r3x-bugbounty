@@ -57,10 +57,15 @@ banner
 # ------------------------------------------------------------------------------
 # 1. Distribution Detection
 # ------------------------------------------------------------------------------
-log_info "Detecting Linux Distribution..."
+log_info "Detecting Linux Distribution & Environment..."
 
 DISTRO="unknown"
 PKG_MGR="unknown"
+IS_WSL=false
+
+if grep -qi "microsoft" /proc/version 2>/dev/null || [ -n "${WSL_DISTRO_NAME}" ]; then
+    IS_WSL=true
+fi
 
 if [ -f /etc/os-release ]; then
     . /etc/os-release
@@ -77,11 +82,21 @@ if [ -f /etc/os-release ]; then
             DISTRO="${NAME:-Arch-based}"
             PKG_MGR="pacman"
             ;;
+        fedora|rhel|centos|rocky|almalinux)
+            DISTRO="${NAME:-RedHat-based}"
+            PKG_MGR="dnf"
+            ;;
+        opensuse*|sles)
+            DISTRO="${NAME:-SUSE-based}"
+            PKG_MGR="zypper"
+            ;;
         *)
             if [ -n "${ID_LIKE}" ]; then
                 case "${ID_LIKE}" in
                     *debian*) DISTRO="Debian-based (${ID})"; PKG_MGR="apt" ;;
                     *arch*) DISTRO="Arch-based (${ID})"; PKG_MGR="pacman" ;;
+                    *rhel*|*fedora*) DISTRO="Fedora/RHEL-based (${ID})"; PKG_MGR="dnf" ;;
+                    *suse*) DISTRO="SUSE-based (${ID})"; PKG_MGR="zypper" ;;
                     *) DISTRO="${ID}"; PKG_MGR="unknown" ;;
                 esac
             fi
@@ -89,7 +104,11 @@ if [ -f /etc/os-release ]; then
     esac
 fi
 
-log_success "Operating System: ${DISTRO}"
+if [ "$IS_WSL" = true ]; then
+    log_success "Operating System: ${DISTRO} (Windows Subsystem for Linux - WSL)"
+else
+    log_success "Operating System: ${DISTRO}"
+fi
 log_info "Detected Package Manager: ${PKG_MGR}"
 
 # ------------------------------------------------------------------------------
@@ -173,6 +192,10 @@ install_system_pkgs() {
             apt update -qq && apt install -y -qq "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
         elif [ "$PKG_MGR" == "pacman" ]; then
             pacman -Sy --noconfirm "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
+        elif [ "$PKG_MGR" == "dnf" ]; then
+            dnf install -y -q "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
+        elif [ "$PKG_MGR" == "zypper" ]; then
+            zypper --non-interactive install "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
         fi
     elif command -v sudo &>/dev/null; then
         echo -e "${CYAN}[sudo] Installing system packages via ${PKG_MGR}...${NC}"
@@ -180,6 +203,10 @@ install_system_pkgs() {
             sudo apt update -qq && sudo apt install -y -qq "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
         elif [ "$PKG_MGR" == "pacman" ]; then
             sudo pacman -Sy --noconfirm "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
+        elif [ "$PKG_MGR" == "dnf" ]; then
+            sudo dnf install -y -q "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
+        elif [ "$PKG_MGR" == "zypper" ]; then
+            sudo zypper --non-interactive install "${pkgs[@]}" >> "${LOG_FILE}" 2>&1
         fi
     else
         log_warn "Neither root nor sudo available. Skipping system packages."

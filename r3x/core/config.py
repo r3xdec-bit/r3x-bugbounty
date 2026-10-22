@@ -46,6 +46,8 @@ class Settings(BaseModel):
     hermes_path: str | None = None
     hermes_endpoint: str = "http://127.0.0.1:8686"
     hexstrike_endpoint: str = "http://127.0.0.1:8888"
+    webhook_url: str | None = None
+    webhook_channel: str = "generic"
     
     network: NetworkConfig = Field(default_factory=NetworkConfig)
     safety: SafetyConfig = Field(default_factory=SafetyConfig)

@@ -13,11 +13,11 @@
 ### Multi-Agent Autonomous Security Auditing & Bug Bounty Assessment Platform
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Release-v2.0.0--Evolution-green.svg)](https://github.com/r3xdec/r3x-bugbounty)
+[![Version](https://img.shields.io/badge/Release-v2.0.0--Evolution-green.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Security](https://img.shields.io/badge/Security-Bandit%20Passing-brightgreen.svg)](https://github.com/r3xdec/r3x-bugbounty)
-[![Multi-Agent](https://img.shields.io/badge/Agents-11%20Autonomous%20%2B%20Debate-purple.svg)](https://github.com/r3xdec/r3x-bugbounty)
-[![Evidence-First](https://img.shields.io/badge/Evidence-SHA--256%20Verified-cyan.svg)](https://github.com/r3xdec/r3x-bugbounty)
+[![Security](https://img.shields.io/badge/Security-Bandit%20Passing-brightgreen.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
+[![Multi-Agent](https://img.shields.io/badge/Agents-12%20Autonomous%20%2B%20Debate-purple.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
+[![Evidence-First](https://img.shields.io/badge/Evidence-SHA--256%20Verified-cyan.svg)](https://github.com/r3xdec-bit/r3x-bugbounty)
 
 [English](README.md) • [العربية](github/README_AR.md) • [Architecture](github/ARCHITECTURE.md) • [Installation](github/INSTALLATION.md) • [Changelog](github/CHANGELOG.md)
 
@@ -27,17 +27,21 @@
 
 ## 🎯 Overview
 
-**R3X-BugBounty** is an open-source, terminal-native cybersecurity assessment framework driven by 11 autonomous AI agents and cognitive correlation engines. Built strictly for authorized security assessments, penetration testing, and Bug Bounty research, R3X coordinates standard security tools, enforces domain boundary containment via the **Scope Guardian**, conducts **3-Agent Adversarial Debates** to eradicate false positives, and builds real-time attack surface topology graphs.
+**R3X-BugBounty** is an open-source, terminal-native cybersecurity assessment framework driven by 12 autonomous AI agents and cognitive correlation engines. Built strictly for authorized security assessments, penetration testing, and Bug Bounty research, R3X coordinates standard security tools, enforces domain boundary containment via the **Scope Guardian**, conducts **3-Agent Adversarial Debates** to eradicate false positives, and builds real-time attack surface topology graphs.
 
 ---
 
 ## ⚡ Key Highlights (v2.0.0 Evolution)
 
 - **Interactive Cyber REPL & Live Dashboard**: Terminal shell with tab auto-completion, live diagnostic matrix (`r3x dashboard`), and authentic service telemetry.
+- **Dynamic Tool Manager (Consent-First)**: Automatically checks PATH for security tools (Nmap, Nuclei, WhatWeb, Katana, etc.), isolates binaries into `~/.local/bin`, and downloads external assets **only after explicit operator consent**.
+- **Authenticated Differential Access Control Scanner**: Audits API endpoints across unauthenticated, low-privilege, and high-privilege sessions to surface Broken Object-Level Authorization (BOLA/IDOR) and Broken Function-Level Authorization (BFLA).
 - **R3X Neural Brain**: Central cognitive correlation engine that automatically chains isolated findings into high-impact multi-stage attack scenarios.
 - **Multi-Agent Adversarial Debate Engine**: 3-Agent dialectic court (Prosecutor vs. Defender adjudicated by Chief Judge) evaluating empirical evidence traces.
 - **Intelligent Attack Surface Graph**: NetworkX-powered target topology with interactive hierarchical terminal trees (`r3x surface`).
 - **AI Mixer V2**: Multi-key, multi-provider model routing with **Budget Guard** (strict financial caps) and **Model Scoring Engine** (dynamic latency, cost, and task affinity optimization).
+- **Multi-Channel Webhook Notifications**: Real-time triage dispatchers for Slack, Discord, and Telegram with automated zero-leakage token and credential redaction.
+- **Universal Linux & WSL Compatibility**: Out-of-the-box support for Kali Linux, Arch Linux, Debian, Ubuntu, Fedora/RHEL (`dnf`), openSUSE (`zypper`), and WSL 1 & 2.
 - **Self-Healing Automation Framework**: Safe failure diagnostics (rate-limits, timeouts, missing tools) with automated exponential backoff and typed retry.
 - **Smart Scan Optimizer**: Pre-flight target analysis dynamically omitting redundant probes.
 - **AI Evidence Validator**: Cryptographic SHA-256 verification and zero-leakage secret redaction audit.
@@ -47,7 +51,7 @@
 
 ---
 
-## 🤖 The 11 Autonomous Agents
+## 🤖 The 12 Autonomous Agents
 
 | # | Agent Name | Core Responsibility |
 |---|---|---|
@@ -57,21 +61,22 @@
 | 4 | **WebSecurityAgent** | Audits HTTP security headers, CORS policies, Cookie flags, and TLS parameters |
 | 5 | **APISecurityAgent** | Discovers and audits REST & GraphQL schemas (OpenAPI/Swagger) |
 | 6 | **JSAnalysisAgent** | Statically analyzes client-side JavaScript for routes, endpoints, and leaked tokens |
-| 7 | **CVEIntelligenceAgent** | Correlates component version disclosures with known vulnerability trends |
-| 8 | **FalsePositiveVerificationAgent** | Coordinates 3-Agent adversarial debates to eliminate false positives |
-| 9 | **EvidenceCollectorAgent** | Sanitizes HTTP traces, computes SHA-256 hashes, and persists memory |
-| 10 | **AIMixerAgent** | Manages LLM router quotas, dynamic scoring, financial budget guard, and backoff |
-| 11 | **ReportGeneratorAgent** | Compiles verified findings into executive HTML, PDF, and platform-ready bounty submissions |
+| 7 | **AuthDifferentialAgent** | Differential role-based authorization auditor detecting BOLA/IDOR and BFLA disparities |
+| 8 | **CVEIntelligenceAgent** | Correlates component version disclosures with known vulnerability trends |
+| 9 | **FalsePositiveVerificationAgent** | Coordinates 3-Agent adversarial debates to eliminate false positives |
+| 10 | **EvidenceCollectorAgent** | Sanitizes HTTP traces, computes SHA-256 hashes, dispatches webhooks, and persists memory |
+| 11 | **AIMixerAgent** | Manages LLM router quotas, dynamic scoring, financial budget guard, and backoff |
+| 12 | **ReportGeneratorAgent** | Compiles verified findings into executive HTML, PDF, and platform-ready bounty submissions |
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Automated Installation
-Run the interactive installer supporting **Kali Linux**, **Arch Linux**, **Ubuntu**, and **Debian**:
+Run the interactive installer supporting **Kali Linux**, **Arch Linux**, **Ubuntu**, **Debian**, **Fedora/RHEL**, **openSUSE**, and **WSL**:
 
 ```bash
-git clone https://github.com/r3xdec/r3x-bugbounty.git
+git clone https://github.com/r3xdec-bit/r3x-bugbounty.git
 cd r3x-bugbounty
 chmod +x install.sh
 ./install.sh

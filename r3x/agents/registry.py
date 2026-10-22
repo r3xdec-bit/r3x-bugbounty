@@ -9,6 +9,7 @@ from rich.table import Table
 
 from r3x.agents.ai_mixer_agent import ai_mixer_agent
 from r3x.agents.api_security_agent import api_security_agent
+from r3x.agents.auth_differential_agent import auth_differential_agent
 from r3x.agents.cve_intel_agent import cve_intel_agent
 from r3x.agents.evidence_collector_agent import evidence_collector_agent
 from r3x.agents.js_analysis_agent import js_analysis_agent
@@ -28,6 +29,7 @@ class AgentRegistry:
             "WebSecurityAgent": web_security_agent,
             "APISecurityAgent": api_security_agent,
             "JSAnalysisAgent": js_analysis_agent,
+            "AuthDifferentialAgent": auth_differential_agent,
             "CVEIntelligenceAgent": cve_intel_agent,
             "EvidenceCollectorAgent": evidence_collector_agent,
             "FalsePositiveVerificationAgent": verification_agent,
@@ -51,7 +53,7 @@ class AgentRegistry:
         return agents_list
 
     def display_agents(self) -> None:
-        table = Table(title="R3X Autonomous Multi-Agent System (11 Agents)", box=None)
+        table = Table(title="R3X Autonomous Multi-Agent System (12 Agents)", box=None)
         table.add_column("#", justify="right", style="dim", width=4)
         table.add_column("Agent Name", style="bold cyan", no_wrap=True)
         table.add_column("Role & Capabilities", style="white")
