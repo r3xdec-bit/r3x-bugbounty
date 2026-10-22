@@ -8,6 +8,12 @@ from typing import Any
 
 import httpx
 
+try:
+    import h2  # type: ignore # noqa: F401
+    HAS_HTTP2 = True
+except ImportError:
+    HAS_HTTP2 = False
+
 from r3x.core.exceptions import ProviderError
 from r3x.core.logger import logger, redact_secrets
 from r3x.mixer.models import DEFAULT_PROVIDERS
@@ -63,7 +69,7 @@ class ProviderClient:
 
         for attempt in range(1, retries + 1):
             try:
-                async with httpx.AsyncClient(timeout=self.timeout, http2=True) as client:
+                async with httpx.AsyncClient(timeout=self.timeout, http2=HAS_HTTP2) as client:
                     resp = await client.post(url, headers=headers, json=payload)
 
                     if resp.status_code == 429:
